@@ -1,0 +1,2 @@
+# /etc/cron.d/basecall-cronjob
+0 5 * * 5 s_prom ./basecall_and_rsync.sh

@@ -1,0 +1,2 @@
+# /etc/cron.d/sort-data-cronjob
+* * * * * s_prom python sort_dirs.py -i "/data" -o "/project/logsdon_shared/long_read_archive"
