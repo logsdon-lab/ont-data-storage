@@ -8,3 +8,4 @@ OUTPUT_DIR="/project/logsdon_shared/long_read_archive"
 
 mamba activate sort_dirs
 python3 "${SCRIPT}" -i "${INPUT_DIR}" -o "${OUTPUT_DIR}" 
+mamba deactivate sort_dirs

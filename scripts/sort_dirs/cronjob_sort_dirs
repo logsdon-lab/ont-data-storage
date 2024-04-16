@@ -1,2 +1,5 @@
-# /etc/cron.d/sort-data-cronjob
-* * * * * s_prom ./sort_dirs.sh
+SHELL=/bin/bash
+BASH_ENV=/project/logsdon_shared/tools/ont-data-storage/other/.bashrc_conda
+MAILTO="oshimak@pennmedicine.upenn.edu"
+# At 5:00 pm everyday.
+0 5 * * * /project/logsdon_shared/tools/ont-data-storage/scripts/sort_dirs/sort_dirs.sh

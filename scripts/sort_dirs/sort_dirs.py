@@ -6,7 +6,12 @@ import argparse
 import logging
 from enum import StrEnum
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.basicConfig(
+    stream=sys.stderr,
+    level=logging.DEBUG,
+    format= '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+    datefmt='%H:%M:%S'
+)
 
 class LongReadArchiveSubDir(StrEnum):
     CLINICAL = "clin"
@@ -31,6 +36,7 @@ def main():
     # Only look at top level.
     root, dirs, _ = next(os.walk(args.input_dir))
 
+    total_dirs_moved = 0
     for dirname in dirs:
         og_dir_path = os.path.join(root, dirname)
         if mtch := re.search(RGX_DIR_PATTERN, dirname):
@@ -41,8 +47,15 @@ def main():
                 continue
             
             new_dir_path = os.path.join(args.output_dir, sorted_dir)
+            os.makedirs(sorted_dir, exist_ok=True)
 
             shutil.move(og_dir_path, new_dir_path)
+            
+            logging.info(f"Moved {og_dir_path} to {new_dir_path}.")
+            total_dirs_moved += 1
+
+    logging.info(f"Moved {total_dirs_moved} directories.")
+    
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -1,0 +1,6 @@
+name: sort_dirs
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12.0
+  - pip
