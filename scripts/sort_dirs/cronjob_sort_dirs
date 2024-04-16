@@ -1,0 +1,2 @@
+# /etc/cron.d/sort-data-cronjob
+* * * * * s_prom ./sort_dirs.sh
