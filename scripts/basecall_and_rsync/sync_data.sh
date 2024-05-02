@@ -34,7 +34,7 @@ done
 host=${host:-'koisland@sarlacc.pmacs.upenn.edu'}
 input_dir=${input_dir:-'/data'}
 output_dir=${output_dir:-'/project/logsdon_shared/long_read_archive/unsorted'}
-regex_data_dir=${regex_data_dir:-'\./20[2-9][0-9]_[0-9]{2}_[0-9]{2}.*'}
+regex_data_dir=${regex_data_dir:-"${input_dir}/20[2-9][0-9]_[0-9]{2}_[0-9]{2}.*/pod5/basecalling"}
 dry_run=${dry_run:-'false'}
 
 # Find data directories matching regex pattern.
