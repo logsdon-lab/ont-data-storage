@@ -2,8 +2,17 @@
 
 set -euo pipefail
 
-SCRIPT="/project/logsdon_shared/tools/ont-data-storage/scripts/basecall_and_rsync/basecall.py"
+mamba activate basecall
 
-mamba activate sort_dirs
-python3 "${SCRIPT}" -i "${INPUT_DIR}" -o "${OUTPUT_DIR}" 
+input_dir=$1
+
+nextflow run epi2me-labs/wf-basecalling \
+    --input $input_dir \
+    --dorado_ext pod5 \
+    --out_dir output \
+    --qscore_filter 10 \
+    --cuda_device "cuda:all" \
+    --basecaller_cfg dna_r10.4.1_e8.2_400bps_sup@v4.3.0 \
+    --remora_cfg "dna_r10.4.1_e8.2_400bps_sup@v4.3.0_5mC_5hmC@v1"
+
 mamba deactivate

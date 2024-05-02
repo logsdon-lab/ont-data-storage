@@ -1,6 +1,7 @@
-name: sort_dirs
+name: basecall
 channels:
   - conda-forge
+  - bioconda
 dependencies:
-  - python=3.12.0
-  - pip
+  - nextflow
+  - singularity
