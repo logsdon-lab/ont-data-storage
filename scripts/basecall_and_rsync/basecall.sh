@@ -49,17 +49,17 @@ unfinished_data_dirs=$(find ${data_dirs[@]} -maxdepth 1 -not -name "*basecalling
 number_unfinished_data_dirs=$(echo "${unfinished_data_dirs[@]}" | wc -l)
 
 if [ -z "${unfinished_data_dirs}" ]; then
-  echo "All data dirs have been basecalled." 1>&2
+  echo "All data dirs have been basecalled."
   exit 0
 fi
 
-echo "Number of unfinished data dirs: ${number_unfinished_data_dirs}" 1>&2
+echo "Number of unfinished data dirs: ${number_unfinished_data_dirs}"
 
 unfinished_data_dir=$(echo "${unfinished_data_dirs[@]}" | sort | head -n 1)
 output_dir="${unfinished_data_dir}/basecalling"
 
-echo "Basecalling ${unfinished_data_dir}" 1>&2
-echo "Output dir: ${output_dir}" 1>&2
+echo "Basecalling ${unfinished_data_dir}"
+echo "Output dir: ${output_dir}"
 
 args=(
     "--input" "${unfinished_data_dir}"
@@ -73,8 +73,8 @@ args=(
 args=$(IFS=" "; echo "${args[*]}")
 
 if [ $dry_run == "true" ]; then
-  echo "" 1>&2
-  echo "nextflow run ${workflow} -profile singularity ${args[@]}" 1>&2
+  echo ""
+  echo "nextflow run ${workflow} -profile singularity ${args[@]}"
 else
   nextflow run epi2me-labs/wf-basecalling -profile singularity ${args[@]}
 fi
