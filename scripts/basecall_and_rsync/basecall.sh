@@ -63,10 +63,10 @@ args=(
 args=$(IFS=" "; echo "${args[*]}")
 
 if [ $dry_run == "true" ]; then
-    echo "" 1>&2
-    echo "nextflow run ${workflow} -profile singularity ${args[@]}" 1>&2
+  echo "" 1>&2
+  echo "nextflow run ${workflow} -profile singularity ${args[@]}" 1>&2
 else
-    nextflow run epi2me-labs/wf-basecalling ${args[@]}
+  nextflow run epi2me-labs/wf-basecalling -profile singularity ${args[@]}
 fi
 
 conda deactivate
