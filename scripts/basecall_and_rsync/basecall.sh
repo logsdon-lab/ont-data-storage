@@ -34,6 +34,11 @@ input_dir=${input_dir:-'/data'}
 regex_data_dir=${regex_data_dir:-"${input_dir}${dir_pattern}"}
 dry_run=${dry_run:-'false'}
 
+if ! [ -d "${input_dir}" ]; then
+  echo "Input directory ${input_dir} does not exist."
+  exit 1
+fi
+
 data_dirs=$(find ${input_dir} -maxdepth 5 -regextype posix-egrep -regex ${regex_data_dir} -type d 2> /dev/null || true )
 
 # Must not have basecalling in name.
@@ -42,6 +47,11 @@ data_dirs=$(find ${input_dir} -maxdepth 5 -regextype posix-egrep -regex ${regex_
 # Take first result.
 unfinished_data_dirs=$(find ${data_dirs[@]} -maxdepth 1 -not -name "*basecalling" -type d -links 2)
 number_unfinished_data_dirs=$(echo "${unfinished_data_dirs[@]}" | wc -l)
+
+if [ -z "${unfinished_data_dirs}" ]; then
+  echo "All data dirs have been basecalled." 1>&2
+  exit 0
+fi
 
 echo "Number of unfinished data dirs: ${number_unfinished_data_dirs}" 1>&2
 
