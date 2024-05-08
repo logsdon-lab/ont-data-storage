@@ -1,0 +1,44 @@
+
+
+rule get_read_lens:
+    input:
+        dorado="/project/logsdon_shared/tools/dorado-0.6.1-linux-x64/bin/dorado",
+        reads="input_dir/{run_dir}/{read_id}.bam"
+    output:
+        "{output_dir}/all_reads_len.tsv"
+    shell:
+        """
+        {input.dorado} summary ${bam_file} | \
+        awk -v OFS='\\t' 'NR > 1 {{
+            if (NF == 12) {{
+                print $2, $10, $1
+            }} else {{
+                print $1, $9, "None"
+            }}
+        }}' > ${summary_file}
+        """
+
+rule join_read_lens:
+    input:
+        ""
+    output:
+        ""
+    shell:
+        """
+        """
+
+rule read_stats:
+    input:
+        script="/project/logsdon_shared/tools/ont_stats"
+    output:
+        ""
+    params:
+        tab_delimited_summary="-t"
+    shell:
+        """
+        python {input.script} \
+        --read_lens "${run_name}=${output_dir}/all_reads_len.tsv" \
+        --plot_dir ${output_dir}/plot \
+        --plot_ext ${output_plot_ext} \
+        {params.tab_delimited_summary} > ${output_dir}/summary.tsv
+        """

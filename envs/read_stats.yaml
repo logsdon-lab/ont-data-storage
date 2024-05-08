@@ -1,0 +1,14 @@
+name: read_stats
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.12.0
+  - snakemake
+  - pip
+  - pip:
+    - pandas
+    - matplotlib
+    - seaborn
+    - numpy
+    - pysam
