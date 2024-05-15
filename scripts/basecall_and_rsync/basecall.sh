@@ -70,7 +70,6 @@ args=(
     "--basecaller_cfg" "dna_r10.4.1_e8.2_400bps_sup@v4.3.0"
     "--remora_cfg" ""dna_r10.4.1_e8.2_400bps_sup@v4.3.0_5mC_5hmC@v1""
 )
-args=$(IFS=" "; echo "${args[*]}")
 
 if [ $dry_run == "true" ]; then
   echo ""
