@@ -1,7 +1,8 @@
 name: basecall
 channels:
   - conda-forge
-  - bioconda
 dependencies:
-  - nextflow
-  - singularity
+  - python
+  - pip
+  - pip:
+    - snakemake

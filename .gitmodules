@@ -1,0 +1,3 @@
+[submodule "scripts/basecall/Snakemake-ONT-Basecalling"]
+	path = scripts/basecall/Snakemake-ONT-Basecalling
+	url = git@github.com:logsdon-lab/Snakemake-ONT-Basecalling.git
