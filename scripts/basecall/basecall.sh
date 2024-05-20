@@ -6,7 +6,8 @@ source ~/miniforge3/etc/profile.d/conda.sh
 conda activate basecall
 
 wd=$(dirname $0)
+cd $wd/Snakemake-ONT-Basecalling
 
-source $wd/Snakemake-ONT-Basecalling/basecall.sh
+source basecall.sh
 
 conda deactivate
