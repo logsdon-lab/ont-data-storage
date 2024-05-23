@@ -44,12 +44,22 @@ data_dirs=$(find ${input_dir} -maxdepth 1 -regextype posix-egrep -regex ${regex_
 # Check that dir has been basecalled.
 basecalled_dirs=()
 for dir in ${data_dirs[@]}; do
-  basecalled_dir=$(find $dir -wholename "*/pod5/basecalling")
+  basecalled_dir=$(find $dir -wholename "*/pod5/basecalling/basecalling.done")
   if [ -z "${basecalled_dir}" ]; then
     continue
   fi
   basecalled_dirs+=($dir)
 done
+
+if [ ${#basecalled_dirs[@]} -eq 0 ]; then
+  echo "No directories to transfer."
+  exit 0
+fi
+
+# Configure network connections.
+# See Settings > Network > eno1/eno2 and nmcli con
+nmcli con down f2a9326d-6547-406d-855b-02ada5936faf
+nmcli con up 126164cd-f65f-3096-a5a5-a8dc9aee692b
 
 # https://linux.die.net/man/1/rsync
 # Sync files in data dirs keeping structure. Show progress.
@@ -63,3 +73,7 @@ else
   # Then find empty dirs only and remove them.
   find ${basecalled_dirs} -type d -empty -delete
 fi
+
+# Reset network connections.
+nmcli con up f2a9326d-6547-406d-855b-02ada5936faf
+nmcli con down 126164cd-f65f-3096-a5a5-a8dc9aee692b
