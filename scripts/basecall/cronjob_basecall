@@ -4,4 +4,4 @@ MAILTO="oshimak@pennmedicine.upenn.edu"
 # At 5:00pm, basecall.
 0 17 * * * /home/prom/Projects/ont-data-storage/scripts/basecall/basecall.sh --configfile /home/prom/Projects/ont-data-storage/scripts/basecall/Snakemake-ONT-Basecalling/config/config.yaml -c 2
 # Then kill Snakemake process in the morning.
-0 8 * * * ( pkill -f "snakemake" &&  echo "Ended basecalling." ) || echo "No basecalling process to end."
+0 8 * * * /home/prom/Projects/ont-data-storage/scripts/basecall/stop_basecall.sh
