@@ -1,44 +1,116 @@
+import os
+import re
+import glob
+from collections import defaultdict
+
+
+INPUT_DIR = config["input_dir"]
+OUTPUT_DIR = config["output_dir"]
+
+# Generate glob pattern from regex pattern.
+RGX_WCS = re.compile(os.path.join(INPUT_DIR, config["regex_read_path"]))
+GLOB_WCS = re.sub(r"\(.*?\)", "*", RGX_WCS.pattern).replace("\\", "")
+
+# Get wildcards from globbed files.
+RUN_DIR_WCS = defaultdict(lambda: defaultdict(list))
+WCS = defaultdict(list)
+for read in glob.glob(os.path.join(INPUT_DIR, GLOB_WCS)):
+    grps = re.search(RGX_WCS, read).groupdict()
+    for grp, val in grps.items():
+        RUN_DIR_WCS[grps["run_dir"]][grp].append(val)
+        WCS[grp].append(val)
+
+# Generate pattern from glob pattern for reading in files.
+# path/*/*.tsv -> path/{sub_dir}/{fname}.tsv
+pattern_reads_elems = GLOB_WCS.split("*")
+for i, p in reversed(list(enumerate(RGX_WCS.groupindex, 1))):
+    pattern_reads_elems.insert(i, "{" + p + "}")
+PATTERN_READS = "".join(pattern_reads_elems)
+
+# Check that basecalling done.
+PATTERN_BASECALLING_DONE = "".join((*pattern_reads_elems[:-2], "basecalling.done"))
+
+
+wildcard_constraints:
+    run_dir="|".join(RUN_DIR_WCS.keys()),
+    sample="|".join(WCS["sample"]),
+    flowcell_id="|".join(WCS["flowcell_id"]),
+    read_id="|".join(WCS["read_id"]),
 
 
 rule get_read_lens:
     input:
-        dorado="/project/logsdon_shared/tools/dorado-0.6.1-linux-x64/bin/dorado",
-        reads="input_dir/{run_dir}/{read_id}.bam"
+        dorado=config["dorado_executable"],
+        reads=PATTERN_READS,
+        basecalling_done=PATTERN_BASECALLING_DONE,
     output:
-        "{output_dir}/all_reads_len.tsv"
+        temp(
+            os.path.join(
+                OUTPUT_DIR,
+                "read_lens",
+                "{run_dir}_{sample}_{flowcell_id}_{read_id}.tsv",
+            )
+        ),
+    log:
+        "logs/read_lens_{run_dir}_{sample}_{flowcell_id}_{read_id}.log",
     shell:
         """
-        {input.dorado} summary ${bam_file} | \
+        {{ {input.dorado} summary {input.reads} | \
         awk -v OFS='\\t' 'NR > 1 {{
             if (NF == 12) {{
                 print $2, $10, $1
             }} else {{
                 print $1, $9, "None"
             }}
-        }}' > ${summary_file}
+        }}' ;}}> {output} 2> {log}
         """
+
 
 rule join_read_lens:
     input:
-        ""
+        lambda wc: expand(
+            rules.get_read_lens.output,
+            run_dir=wc.run_dir,
+            sample=RUN_DIR_WCS[str(wc.run_dir)]["sample"],
+            flowcell_id=RUN_DIR_WCS[str(wc.run_dir)]["flowcell_id"],
+            read_id=RUN_DIR_WCS[str(wc.run_dir)]["read_id"],
+        ),
     output:
-        ""
+        os.path.join(OUTPUT_DIR, "{run_dir}", "read_lens", "all_reads.tsv"),
     shell:
         """
+        cat {input} > {output}
         """
 
+
+# TODO: Incorporate category parsing to set genome size.
 rule read_stats:
     input:
-        script="/project/logsdon_shared/tools/ont_stats"
+        script="/project/logsdon_shared/tools/ont-data-storage/scripts/read_stats/read_stats.py",
+        all_reads_len=rules.join_read_lens.output,
     output:
-        ""
+        plot_dir=directory(os.path.join(OUTPUT_DIR, "{run_dir}", "plot")),
+        read_summary=os.path.join(
+            OUTPUT_DIR, "{run_dir}", "summary", "read_summary.tsv"
+        ),
+    log:
+        "logs/read_stats_{run_dir}.log",
+    conda:
+        "/project/logsdon_shared/tools/ont-data-storage/envs/read_stats.yaml"
     params:
-        tab_delimited_summary="-t"
+        tab_delimited_summary="-t",
+        plot_ext="pdf",
     shell:
         """
         python {input.script} \
-        --read_lens "${run_name}=${output_dir}/all_reads_len.tsv" \
-        --plot_dir ${output_dir}/plot \
-        --plot_ext ${output_plot_ext} \
-        {params.tab_delimited_summary} > ${output_dir}/summary.tsv
+        --read_lens "{wildcards.run_dir}={input.all_reads_len}" \
+        --plot_dir {output.plot_dir} \
+        --plot_ext {params.plot_ext} \
+        {params.tab_delimited_summary} > {output.read_summary} 2> {log}
         """
+
+
+rule all:
+    input:
+        expand(rules.read_stats.output, run_dir=RUN_DIR_WCS.keys()),
+    default_target: True

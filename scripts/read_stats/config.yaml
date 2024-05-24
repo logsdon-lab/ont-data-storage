@@ -1,5 +1,5 @@
-input_dir: ""
-output_dir: ""
-regex_read_path: ""
+input_dir: "/project/logsdon_shared/long_read_archive/unsorted"
+output_dir: "/project/logsdon_shared/long_read_archive/summary"
+regex_read_path: '(?P<run_dir>[^/]+)/(?P<sample>[^/]+)/(?P<flowcell_id>[^/]+)/pod5/basecalling/(?P<read_id>[^/]+)\.bam'
 output_plot_ext: "pdf"
 dorado_executable: "/project/logsdon_shared/tools/dorado-0.6.1-linux-x64/bin/dorado"

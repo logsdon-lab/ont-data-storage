@@ -1,4 +1,7 @@
 work/
 output/
+logs/
+results/
 .nextflow
+.snakemake
 *.log
