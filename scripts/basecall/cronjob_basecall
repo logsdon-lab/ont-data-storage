@@ -2,6 +2,6 @@ SHELL=/bin/bash
 BASH_ENV=/home/prom/Projects/ont-data-storage/scripts/other/.bashrc_conda
 MAILTO="oshimak@pennmedicine.upenn.edu"
 # At 5:00pm, basecall.
-0 17 * * * /home/prom/Projects/ont-data-storage/scripts/basecall/basecall.sh --configfile /home/prom/Projects/ont-data-storage/scripts/basecall/Snakemake-ONT-Basecalling/config/config.yaml -c 2
+0 17 * * * /home/prom/Projects/ont-data-storage/scripts/basecall/basecall.sh --configfile /home/prom/Projects/ont-data-storage/scripts/basecall/Snakemake-ONT-Basecalling/config/config.yaml -c 1
 # Then kill Snakemake process in the morning.
 0 8 * * * /home/prom/Projects/ont-data-storage/scripts/basecall/stop_basecall.sh
