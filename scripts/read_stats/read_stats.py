@@ -168,16 +168,10 @@ parser.add_argument(
     help="Read length window size for plotting bins",
 )
 parser.add_argument(
-    "--plot_type",
-    choices=["original", "cdf"],
-    default="cdf",
-    help="Plot type."
+    "--plot_type", choices=["original", "cdf"], default="cdf", help="Plot type."
 )
 parser.add_argument(
-    "--plot_ext",
-    choices=["png", "pdf"],
-    default="pdf",
-    help="Plot format."
+    "--plot_ext", choices=["png", "pdf"], default="pdf", help="Plot format."
 )
 
 args = parser.parse_args()
@@ -201,7 +195,9 @@ def read_tsv_read_lens(lens: List[str]) -> Generator[pd.DataFrame, None, None]:
         sm_len: str
         sm, _, lens_path = sm_len.partition("=")
 
-        yield pd.read_csv(lens_path, sep="\t", header=None, usecols=[0, 1]).assign(sm=sm)
+        yield pd.read_csv(lens_path, sep="\t", header=None, usecols=[0, 1]).assign(
+            sm=sm
+        )
 
 
 def read_samples(
@@ -224,11 +220,13 @@ def read_samples(
 if args.samples:
     # flattens list
     file_filters = [filt for filt in (args.model, args.version, args.runid) if filt]
-    path_gen = (
-        lambda sample: f"/project/logsdon_shared/long_read_archive/{args.cohort}/{sample}/raw_data/ont/*.fai"
-        if args.read_type == "ont"
-        else f"/project/logsdon_shared/long_read_archive/{args.cohort}/{sample}/raw_data/pacbio_hifi/subreads/*.fai"
-    )
+
+    def path_gen(sample: str) -> str:
+        return (
+            f"/project/logsdon_shared/long_read_archive/{args.cohort}/{sample}/raw_data/ont/*.fai"
+            if args.read_type == "ont"
+            else f"/project/logsdon_shared/long_read_archive/{args.cohort}/{sample}/raw_data/pacbio_hifi/subreads/*.fai"
+        )
 
     df = pd.concat(read_samples(args.samples, path_gen=path_gen, filters=None))
 elif args.fofns:
@@ -283,7 +281,6 @@ for sm in df["sm"].unique():
     if args.plot_dir:
         os.makedirs(args.plot_dir, exist_ok=True)
 
-
         if args.plot_type == "cdf":
             sns.set(font_scale=3)
             sns.set_style("ticks")
@@ -318,12 +315,18 @@ for sm in df["sm"].unique():
 
             # plot
             plt.xticks(xts, xls)
-            Gb = sum(df_sm[1]) / 1000000000
-            plt.xlabel("Length (kbp), Total Gb = {:.2f}".format(Gb))
+            Gb = sum(df_sm[1]) / 1_000_000_000
+            Gb_100kbp = sum(df_sm[df_sm[1] > 100_000][1]) / 1_000_000_000
+            plt.xlabel(
+                "Length (kbp), Total Gb = {:.2f}, Total Gb (> 100kbp) = {:.2f}".format(
+                    Gb, Gb_100kbp
+                )
+            )
             plt.ylabel("Number of reads")
             plt.tight_layout()
             plt.savefig(
-                os.path.join(args.plot_dir, f"{sm}_read_length.{args.plot_ext}"), bbox_inches="tight"
+                os.path.join(args.plot_dir, f"{sm}_read_length.{args.plot_ext}"),
+                bbox_inches="tight",
             )
         else:
             BIN_SIZE = args.window
@@ -360,5 +363,6 @@ for sm in df["sm"].unique():
 
             plt.title(sm)
             plt.savefig(
-                os.path.join(args.plot_dir, f"{sm}_read_length.{args.plot_ext}"), bbox_inches="tight"
+                os.path.join(args.plot_dir, f"{sm}_read_length.{args.plot_ext}"),
+                bbox_inches="tight",
             )

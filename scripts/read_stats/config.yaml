@@ -1,4 +1,10 @@
-input_dir: "/project/logsdon_shared/long_read_archive/unsorted"
+input_dirs:
+  nhp: "/project/logsdon_shared/long_read_archive/nhp"
+  clinical: "/project/logsdon_shared/long_read_archive/clinical"
+  pop: "/project/logsdon_shared/long_read_archive/pop"
+  practice: "/project/logsdon_shared/long_read_archive/practice"
+  sharing: "/project/logsdon_shared/long_read_archive/sharing"
+
 output_dir: "/project/logsdon_shared/long_read_archive/summary"
 regex_read_path: '(?P<run_dir>[^/]+)/(?P<sample>[^/]+)/(?P<flowcell_id>[^/]+)/pod5/basecalling/(?P<read_id>[^/]+)\.bam'
 output_plot_ext: "pdf"

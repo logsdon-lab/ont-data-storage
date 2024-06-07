@@ -4,55 +4,64 @@ import glob
 from collections import defaultdict
 
 
-INPUT_DIR = config["input_dir"]
+INPUT_DIRS = config["input_dirs"]
 OUTPUT_DIR = config["output_dir"]
+RUN_DIR_WCS = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+WCS = defaultdict(lambda: defaultdict(list))
+PATTERNS = defaultdict(dict)
 
-# Generate glob pattern from regex pattern.
-RGX_WCS = re.compile(os.path.join(INPUT_DIR, config["regex_read_path"]))
-GLOB_WCS = re.sub(r"\(.*?\)", "*", RGX_WCS.pattern).replace("\\", "")
 
-# Get wildcards from globbed files.
-RUN_DIR_WCS = defaultdict(lambda: defaultdict(list))
-WCS = defaultdict(list)
-for read in glob.glob(os.path.join(INPUT_DIR, GLOB_WCS)):
-    grps = re.search(RGX_WCS, read).groupdict()
-    for grp, val in grps.items():
-        RUN_DIR_WCS[grps["run_dir"]][grp].append(val)
-        WCS[grp].append(val)
+for name, input_dir in INPUT_DIRS.items():
+    # Generate glob pattern from regex pattern.
+    RGX_WCS = re.compile(os.path.join(input_dir, config["regex_read_path"]))
+    GLOB_WCS = re.sub(r"\(.*?\)", "*", RGX_WCS.pattern).replace("\\", "")
 
-# Generate pattern from glob pattern for reading in files.
-# path/*/*.tsv -> path/{sub_dir}/{fname}.tsv
-pattern_reads_elems = GLOB_WCS.split("*")
-for i, p in reversed(list(enumerate(RGX_WCS.groupindex, 1))):
-    pattern_reads_elems.insert(i, "{" + p + "}")
-PATTERN_READS = "".join(pattern_reads_elems)
+    # Get wildcards from globbed files.
+    for read in glob.glob(os.path.join(input_dir, GLOB_WCS)):
+        grps = re.search(RGX_WCS, read).groupdict()
+        for grp, val in grps.items():
+            RUN_DIR_WCS[name][grps["run_dir"]][grp].append(val)
+            WCS[name][grp].append(val)
 
-# Check that basecalling done.
-PATTERN_BASECALLING_DONE = "".join((*pattern_reads_elems[:-2], "basecalling.done"))
+    # Generate pattern from glob pattern for reading in files.
+    # path/*/*.tsv -> path/{sub_dir}/{fname}.tsv
+    pattern_reads_elems = GLOB_WCS.split("*")
+    for i, p in reversed(list(enumerate(RGX_WCS.groupindex, 1))):
+        pattern_reads_elems.insert(i, "{" + p + "}")
+    PATTERNS[name]["reads"] = "".join(pattern_reads_elems)
+
+    # Check that basecalling done.
+    PATTERNS[name]["chkpt"] = "".join((*pattern_reads_elems[:-2], "basecalling.done"))
+
+NAME_DIRS, RUN_DIRS = tuple(
+    zip(*[(i, r) for i in INPUT_DIRS.keys() for r in RUN_DIR_WCS[i].keys()])
+)
 
 
 wildcard_constraints:
-    run_dir="|".join(RUN_DIR_WCS.keys()),
-    sample="|".join(WCS["sample"]),
-    flowcell_id="|".join(WCS["flowcell_id"]),
-    read_id="|".join(WCS["read_id"]),
+    name="|".join(RUN_DIR_WCS.keys()),
+    run_dir="|".join(d for k, v in RUN_DIR_WCS.items() for d in v.keys()),
+    sample="|".join(s for k, v in WCS.items() for s in v["sample"]),
+    flowcell_id="|".join(f for k, v in WCS.items() for f in v["flowcell_id"]),
+    read_id="|".join(r for k, v in WCS.items() for r in v["read_id"]),
 
 
 rule get_read_lens:
     input:
         dorado=config["dorado_executable"],
-        reads=PATTERN_READS,
-        basecalling_done=PATTERN_BASECALLING_DONE,
+        reads=lambda wc: PATTERNS[str(wc.name)]["reads"],
+        basecalling_done=lambda wc: PATTERNS[str(wc.name)]["chkpt"],
     output:
         temp(
             os.path.join(
                 OUTPUT_DIR,
                 "read_lens",
+                "{name}",
                 "{run_dir}_{sample}_{flowcell_id}_{read_id}.tsv",
             )
         ),
     log:
-        "logs/read_lens_{run_dir}_{sample}_{flowcell_id}_{read_id}.log",
+        "logs/read_lens_{name}_{run_dir}_{sample}_{flowcell_id}_{read_id}.log",
     shell:
         """
         {{ {input.dorado} summary {input.reads} | \
@@ -70,13 +79,14 @@ rule join_read_lens:
     input:
         lambda wc: expand(
             rules.get_read_lens.output,
+            name=wc.name,
             run_dir=wc.run_dir,
-            sample=RUN_DIR_WCS[str(wc.run_dir)]["sample"],
-            flowcell_id=RUN_DIR_WCS[str(wc.run_dir)]["flowcell_id"],
-            read_id=RUN_DIR_WCS[str(wc.run_dir)]["read_id"],
+            sample=RUN_DIR_WCS[str(wc.name)][str(wc.run_dir)]["sample"],
+            flowcell_id=RUN_DIR_WCS[str(wc.name)][str(wc.run_dir)]["flowcell_id"],
+            read_id=RUN_DIR_WCS[str(wc.name)][str(wc.run_dir)]["read_id"],
         ),
     output:
-        os.path.join(OUTPUT_DIR, "{run_dir}", "read_lens", "all_reads.tsv"),
+        os.path.join(OUTPUT_DIR, "{name}", "{run_dir}", "read_lens", "all_reads.tsv"),
     shell:
         """
         cat {input} > {output}
@@ -89,12 +99,12 @@ rule read_stats:
         script="/project/logsdon_shared/tools/ont-data-storage/scripts/read_stats/read_stats.py",
         all_reads_len=rules.join_read_lens.output,
     output:
-        plot_dir=directory(os.path.join(OUTPUT_DIR, "{run_dir}", "plot")),
+        plot_dir=directory(os.path.join(OUTPUT_DIR, "{name}", "{run_dir}", "plot")),
         read_summary=os.path.join(
-            OUTPUT_DIR, "{run_dir}", "summary", "read_summary.tsv"
+            OUTPUT_DIR, "{name}", "{run_dir}", "summary", "read_summary.tsv"
         ),
     log:
-        "logs/read_stats_{run_dir}.log",
+        "logs/read_stats_{name}_{run_dir}.log",
     conda:
         "/project/logsdon_shared/tools/ont-data-storage/envs/read_stats.yaml"
     params:
@@ -112,5 +122,5 @@ rule read_stats:
 
 rule all:
     input:
-        expand(rules.read_stats.output, run_dir=RUN_DIR_WCS.keys()),
+        expand(rules.read_stats.output, name=NAME_DIRS, run_dir=RUN_DIRS),
     default_target: True
