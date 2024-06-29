@@ -79,6 +79,7 @@ rule join_read_lens:
     input:
         lambda wc: expand(
             rules.get_read_lens.output,
+            zip,
             name=wc.name,
             run_dir=wc.run_dir,
             sample=RUN_DIR_WCS[str(wc.name)][str(wc.run_dir)]["sample"],
