@@ -168,7 +168,10 @@ parser.add_argument(
     help="Read length window size for plotting bins",
 )
 parser.add_argument(
-    "--plot_type", choices=["original", "cdf"], default="cdf", help="Plot type."
+    "--plot_type",
+    choices=["read_base_sum", "read_len_dist"],
+    default="read_len_dist",
+    help="Plot type.",
 )
 parser.add_argument(
     "--plot_ext", choices=["png", "pdf"], default="pdf", help="Plot format."
@@ -281,7 +284,7 @@ for sm in df["sm"].unique():
     if args.plot_dir:
         os.makedirs(args.plot_dir, exist_ok=True)
 
-        if args.plot_type == "cdf":
+        if args.plot_type == "read_len_dist":
             sns.set(font_scale=3)
             sns.set_style("ticks")
             fig, ax = plt.subplots(figsize=(20, 12))
