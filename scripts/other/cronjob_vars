@@ -1,0 +1,3 @@
+SHELL=/bin/bash
+BASH_ENV=/project/logsdon_shared/tools/ont-data-storage/scripts/other/.bashrc_conda
+MAILTO="oshimak@pennmedicine.upenn.edu"

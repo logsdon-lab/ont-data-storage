@@ -1,5 +1,2 @@
-SHELL=/bin/bash
-BASH_ENV=/project/logsdon_shared/tools/ont-data-storage/scripts/other/.bashrc_conda
-MAILTO="oshimak@pennmedicine.upenn.edu"
 # At 3:00 pm everyday.
 0 15 * * * /project/logsdon_shared/tools/ont-data-storage/scripts/read_stats/summary.sh -c 4 --rerun-incomplete
