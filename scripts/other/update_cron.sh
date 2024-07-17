@@ -36,9 +36,10 @@ else
     exit 1
 fi
 
+tmp_cronjob="cronjob_${target}"
 cat \
     "${cronjob_vars}" \
-    <(awk -v WD="${wd}" '{ print WD"/"$1"/cronjob_"$1 }' <(IFS=$'\n'; echo "${jobs[*]}") | xargs cat) > "/tmp/cronjob_${target}"
+    <(awk -v WD="${wd}" '{ print WD"/"$1"/cronjob_"$1 }' <(IFS=$'\n'; echo "${jobs[*]}") | xargs cat) > "${tmp_cronjob}"
 
 read -r -p "Warning! Reset the existing crontab? [y/n]: " answer
 if [ "${answer}" != "y" ]; then
@@ -48,5 +49,6 @@ fi
 # Reset crontab
 (crontab -r || true) 2> /dev/null
 # Then replace.
-crontab "/tmp/cronjob_${target}"
+crontab "${tmp_cronjob}"
+rm "${tmp_cronjob}"
 echo "Replaced crontab."
