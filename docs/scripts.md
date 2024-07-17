@@ -3,11 +3,6 @@ Ensure your service account has [`miniforge`](https://github.com/conda-forge/min
 
 Also, if the user is not `s_prom`, the bash environment file, `scripts/other/.bashrc_conda`, must be modified.
 
-### Create Conda environment
-```bash
-make conda_env job="read_stats"
-```
-
 ### Update cronjobs
 ```bash
 make update_cron target="lpc"

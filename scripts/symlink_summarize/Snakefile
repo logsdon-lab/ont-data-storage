@@ -1,0 +1,117 @@
+import os
+import pathlib
+
+
+INPUT_DIR = pathlib.Path(config["input_dir"])
+OUTPUT_DIR = pathlib.Path(config["output_dir"])
+RUN_DIRS = [x.stem for x in INPUT_DIR.iterdir() if x.is_dir()]
+
+
+wildcard_constraints:
+    category="|".join(f.stem for f in OUTPUT_DIR.iterdir()),
+
+
+checkpoint symlink_dir:
+    input:
+        script="symlink_bams.py",
+        run_dir=INPUT_DIR.joinpath("{run_dir}"),
+    output:
+        temp(os.path.join("/tmp/symlinked_{run_dir}.txt")),
+    params:
+        output_dir=OUTPUT_DIR,
+        regex_pattern=lambda wc: config["regex_pattern"],
+        basecalling_outdir=config["basecalling_outdir"],
+    log:
+        "logs/symlink_{run_dir}.log",
+    conda:
+        "env.yaml"
+    shell:
+        """
+        python {input.script} -i {input.run_dir} -o {params.output_dir} -r '{params.regex_pattern}' --basecalling_outdir {params.basecalling_outdir} > {output} 2> {log}
+        """
+
+
+rule get_read_lens:
+    input:
+        dorado=config["dorado_executable"],
+        reads=OUTPUT_DIR.joinpath("{category}/{sample}/{run_info}/{ftype}/{run_id}.bam"),
+    output:
+        OUTPUT_DIR.joinpath(
+            "{category}/{sample}/{run_info}/reports/read_lens/{run_id}_{ftype}_read_lens.tsv"
+        ),
+    log:
+        "logs/get_read_lens_{category}_{sample}_{run_info}_{ftype}_{run_id}.log",
+    shell:
+        """
+        {{ {input.dorado} summary {input.reads} | \
+        awk -v OFS='\\t' 'NR > 1 {{
+            if (NF == 12) {{
+                print $2, $10, $1
+            }} else {{
+                print $1, $9, "None"
+            }}
+        }}' ;}}> "{output}" 2> {log}
+        """
+
+
+rule read_stats:
+    input:
+        script="read_stats.py",
+        all_reads_len=rules.get_read_lens.output,
+    output:
+        plot_dir=directory(
+            OUTPUT_DIR.joinpath(
+                "{category}/{sample}/{run_info}/reports/plot/{run_id}_{ftype}_reads"
+            )
+        ),
+        read_summary=OUTPUT_DIR.joinpath(
+            "{category}/{sample}/{run_info}/reports/summary/{run_id}_{ftype}_summary.tsv"
+        ),
+    log:
+        "logs/read_stats_{category}_{sample}_{run_info}_{ftype}_{run_id}.log",
+    conda:
+        "env.yaml"
+    params:
+        tab_delimited_summary="-t",
+        plot_ext="pdf",
+        run_id="{run_id}",
+    shell:
+        """
+        python {input.script} \
+        --read_lens "{params.run_id}={input.all_reads_len}" \
+        --plot_dir {output.plot_dir} \
+        --plot_ext {params.plot_ext} \
+        {params.tab_delimited_summary} > {output.read_summary} 2> {log}
+        """
+
+
+def get_symlinked_files(wc) -> dict[str, list[str]]:
+    output = checkpoints.symlink_dir.get(**wc).output[0]
+    new_wcs = ["category", "sample", "run_info", "ftype", "run_id"]
+    path_components = [
+        pathlib.Path(f.strip()).relative_to(OUTPUT_DIR).with_suffix("").parts
+        for f in open(output).readlines()
+    ]
+    new_wcs = dict(zip(new_wcs, zip(*path_components)))
+    if not new_wcs:
+        print(f"{wc.run_dir} did not symlink files.", file=sys.stderr)
+        return {}
+
+    return expand(
+        rules.read_stats.output,
+        **new_wcs,
+    )
+
+
+rule get_read_stats:
+    input:
+        unpack(get_symlinked_files),
+    output:
+        touch("/tmp/{run_dir}.done"),
+
+
+rule all:
+    input:
+        expand(rules.symlink_dir.output, run_dir=RUN_DIRS),
+        expand(rules.get_read_stats.output, run_dir=RUN_DIRS),
+    default_target: True

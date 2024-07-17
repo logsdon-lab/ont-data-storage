@@ -8,3 +8,9 @@ This repo contains all relevant documentation and scripts used to transfer data 
     * Describes scripts usage.
 * [`docs/structure.md`](docs/structure.md)
     * Describes directory structure of `/project/logsdon_shared/long_read_archive/`
+
+### Development
+```bash
+pip install pre-commit
+pre-commit install
+```

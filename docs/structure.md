@@ -8,7 +8,6 @@
 ├── pop
 ├── practice
 ├── sharing
-├── summary
 └── unsorted
 ```
 
@@ -24,9 +23,6 @@ Practice runs.
 
 ### `sharing`
 Data for sharing with collaborators.
-
-### `summary`
-Directory with run statistics and plots.
 
 ### `unsorted`
 Unsorted data transferred from the PromethION.
@@ -48,10 +44,4 @@ Or two words delimited by a single `'_'`:
 
 
 Example:
-* `20240506_nhp_PAN_PR00036_ULK114`
-    ```
-    /project/logsdon_shared/long-read-archive/
-    └── nhp
-        └── PR00036
-    ```
-* `20240506_nhp_PR00036_ULK114`
+* TODO

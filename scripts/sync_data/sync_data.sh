@@ -15,7 +15,7 @@ usage() {
   echo "    -h      Print help."
   echo ""
   echo "Example:"
-  echo "./scripts/sync_data.sh -u "s_prom@sarlacc.pmacs.upenn.edu" -i "/data" -o "/project/logsdon_shared/long_read_archive/unsorted" -r '\./20[2-9][0-9]_[0-9]{2}_[0-9]{2}.*'"
+  echo "./scripts/sync_data.sh -u "s_prom@sarlacc.pmacs.upenn.edu" -i '/data' -o '/project/logsdon_shared/long_read_archive/unsorted' -r '\./20[2-9][0-9]{5}.*'"
 }
 
 while getopts 'u:i:o:r:hn' flag; do
@@ -34,21 +34,21 @@ done
 host=${host:-'s_prom@sarlacc.pmacs.upenn.edu'}
 input_dir=${input_dir:-'/data'}
 output_dir=${output_dir:-'/project/logsdon_shared/long_read_archive/unsorted'}
-regex_data_dir=${regex_data_dir:-"${input_dir}/20[2-9][0-9]_[0-9]{2}_[0-9]{2}.*"}
+regex_data_dir=${regex_data_dir:-"${input_dir}/20[2-9][0-9]{5}.*"}
 dry_run=${dry_run:-'false'}
 
 # Find data directories matching regex pattern.
 # We restrict depth to avoid finding subdirs, etc.
-data_dirs=$(find ${input_dir} -maxdepth 1 -regextype posix-egrep -regex ${regex_data_dir} )
+data_dirs=$(find "${input_dir}" -maxdepth 1 -regextype posix-egrep -regex "${regex_data_dir}" )
 
 # Check that dir has been basecalled.
 basecalled_dirs=()
-for dir in ${data_dirs[@]}; do
-  basecalled_dir=$(find $dir -wholename "*/pod5/basecalling/basecalling.done")
+for dir in "${data_dirs[@]}"; do
+  basecalled_dir=$(find "${dir}" -wholename "*/pod5/basecalling/basecalling.done")
   if [ -z "${basecalled_dir}" ]; then
     continue
   fi
-  basecalled_dirs+=($dir)
+  basecalled_dirs+=("${dir}")
 done
 
 if [ ${#basecalled_dirs[@]} -eq 0 ]; then
@@ -64,14 +64,14 @@ nmcli con up "ECM" ifname eno2
 # https://linux.die.net/man/1/rsync
 # Sync files in data dirs keeping structure. Show progress.
 # After sync, remove files.
-if [ $dry_run == "true" ]; then
-  rsync --dry-run --verbose -P ${basecalled_dirs} ${host}:${output_dir}
+if [ "${dry_run}" == "true" ]; then
+  rsync --dry-run --verbose -P "${basecalled_dirs[@]}" "${host}:${output_dir}"
 else
   rsync --archive --update --compress --verbose -P --remove-source-files \
-      ${basecalled_dirs} ${host}:${output_dir}
+      "${basecalled_dirs[@]}" "${host}:${output_dir}"
 
   # Then find empty dirs only and remove them.
-  find ${basecalled_dirs} -type d -empty -delete
+  find "${basecalled_dirs[@]}" -type d -empty -delete
 fi
 
 # Reset network connections.

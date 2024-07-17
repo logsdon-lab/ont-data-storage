@@ -14,14 +14,14 @@ Arguments:
     -h      Print help.
 
 Example:
-./sync_data.sh -u koisland@sarlacc.pmacs.upenn.edu -i /data -o /project/logsdon_shared/long_read_archive/unsorted -r '\./20[2-9][0-9]_[0-9]{2}_[0-9]{2}.*'
+./sync_data.sh -u koisland@sarlacc.pmacs.upenn.edu -i /data -o /project/logsdon_shared/long_read_archive/unsorted -r '\./20[2-9][0-9]{5}.*'
 ```
 
 Transfer:
 * To user `koisland` on host `sarlacc.pmacs.upenn.edu`
 * From the local directory `/data`
-    * Any file or directory relative to the local directory with the regex pattern, `\./20[2-9][0-9]_[0-9]{2}_[0-9]{2}.*`
-        * ex. `2024_12_21...`
+    * Any file or directory relative to the local directory with the regex pattern, `\./20[2-9][0-9]{5}.*`
+        * ex. `20241221...`
 * To the host directory, `/project/logsdon_shared/long_read_archive/unsorted`
     * **NOTE** This directory must exist.
 
@@ -30,5 +30,5 @@ Transfer:
     -u "koisland@sarlacc.pmacs.upenn.edu" \
     -i "/data" \
     -o "/project/logsdon_shared/long_read_archive/unsorted" \
-    -r "\./20[2-9][0-9]_[0-9]{2}_[0-9]{2}.*"
+    -r "\./20[2-9][0-9]{5}.*"
 ```

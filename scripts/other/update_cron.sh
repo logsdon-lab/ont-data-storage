@@ -28,7 +28,7 @@ cronjob_vars="${wd}/other/cronjob_vars"
 echo "Working directory: ${wd}"
 echo "Replacing crontab for '${target}'"
 if [ "${target}" == "lpc" ]; then
-    jobs=( "read_stats" "sort_dirs")
+    jobs=( "symlink_summarize" )
 elif [ "${target}" == "prom" ]; then
     jobs=( "basecall" "sync_data" )
 else
