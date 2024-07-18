@@ -15,7 +15,7 @@ usage() {
   echo "    -h      Print help."
   echo ""
   echo "Example:"
-  echo "./scripts/sync_data.sh -u "s_prom@sarlacc.pmacs.upenn.edu" -i '/data' -o '/project/logsdon_shared/long_read_archive/unsorted' -r '\./20[2-9][0-9]{5}.*'"
+  echo "./scripts/sync_data.sh -u "s_prom@sarlacc.pmacs.upenn.edu" -i '/data' -o '/project/logsdon_shared/long_read_archive/unsorted' -r '/data/20[2-9][0-9]{5}.*'"
 }
 
 while getopts 'u:i:o:r:hn' flag; do
