@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail
+set -euxo pipefail
 
 usage() {
   echo "Usage: $0 [-u user_host] [-i input_dir] [-o output_dir] [-r regex_data_dir] [-nh]"
@@ -39,11 +39,11 @@ dry_run=${dry_run:-'false'}
 
 # Find data directories matching regex pattern.
 # We restrict depth to avoid finding subdirs, etc.
-data_dirs=$(find "${input_dir}" -maxdepth 1 -regextype posix-egrep -regex "${regex_data_dir}" )
+data_dirs=$(find "${input_dir}" -maxdepth 1 -regextype posix-egrep -regex "${regex_data_dir}")
 
 # Check that dir has been basecalled.
 basecalled_dirs=()
-for dir in "${data_dirs[@]}"; do
+for dir in ${data_dirs}; do
   basecalled_dir=$(find "${dir}" -wholename "*/pod5/basecalling/basecalling.done")
   if [ -z "${basecalled_dir}" ]; then
     continue
