@@ -175,8 +175,7 @@ def main():
         try:
             bamfile_symlink.symlink_to(bamfile)
         except FileExistsError:
-            logging.info(f"Skipping existing file: {bamfile_symlink}")
-            continue
+            logging.info(f"Skipping symlinking existing file: {bamfile_symlink}")
 
         logging.info(f"Symlinked {bamfile} to {bamfile_symlink}")
         symlinked_files.add(bamfile_symlink)

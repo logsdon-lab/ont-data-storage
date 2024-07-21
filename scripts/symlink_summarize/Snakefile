@@ -1,3 +1,4 @@
+import re
 import os
 import pathlib
 
@@ -5,10 +6,22 @@ import pathlib
 INPUT_DIR = pathlib.Path(config["input_dir"])
 OUTPUT_DIR = pathlib.Path(config["output_dir"])
 RUN_DIRS = [x.stem for x in INPUT_DIR.iterdir() if x.is_dir()]
+SAMPLES = set()
+for run_dir in RUN_DIRS:
+    mtch = re.search(config["regex_pattern"], run_dir)
+    if mtch:
+        abbr, _, sample = mtch.group("sample").partition("_")
+        SAMPLES.add(sample if sample else abbr)
+    else:
+        print(
+            f"{run_dir} incorrectly formatted. Sample not parseable.", file=sys.stderr
+        )
 
 
 wildcard_constraints:
     category="|".join(f.stem for f in OUTPUT_DIR.iterdir()),
+    sample="|".join(SAMPLES),
+    run_info="[^all]",
 
 
 checkpoint symlink_dir:
@@ -27,7 +40,30 @@ checkpoint symlink_dir:
         "env.yaml"
     shell:
         """
-        python {input.script} -i {input.run_dir} -o {params.output_dir} -r '{params.regex_pattern}' --basecalling_outdir {params.basecalling_outdir} > {output} 2> {log}
+        python {input.script} \
+        -i {input.run_dir} \
+        -o {params.output_dir} \
+        -r '{params.regex_pattern}' \
+        --basecalling_outdir {params.basecalling_outdir} > {output} 2> {log}
+        """
+
+
+checkpoint group_by_sample:
+    input:
+        script="group_samples.py",
+        dirs=expand(os.path.join("output/symlinked_{run_dir}.txt"), run_dir=RUN_DIRS),
+    output:
+        os.path.join("output/all_symlinked_grouped.tsv"),
+    log:
+        "logs/group_by_sample.log",
+    params:
+        # Not for output file. Used to construct paths. Janky. :/
+        output_dir=OUTPUT_DIR,
+    conda:
+        "env.yaml"
+    shell:
+        """
+        python {input.script} -i {input.dirs} --path_output_dir {params.output_dir} > {output} 2> {log}
         """
 
 
@@ -36,9 +72,13 @@ rule get_read_lens:
         dorado=config["dorado_executable"],
         reads=OUTPUT_DIR.joinpath("{category}/{sample}/{run_info}/{ftype}/{run_id}.bam"),
     output:
-        OUTPUT_DIR.joinpath(
-            "{category}/{sample}/{run_info}/reports/read_lens/{run_id}_{ftype}_read_lens.tsv"
+        ensure(
+            OUTPUT_DIR.joinpath(
+                "{category}/{sample}/{run_info}/reports/read_lens/{run_id}_{ftype}_read_lens.tsv"
+            ),
+            non_empty=True,
         ),
+    retries: 1
     log:
         "logs/get_read_lens_{category}_{sample}_{run_info}_{ftype}_{run_id}.log",
     shell:
@@ -85,7 +125,48 @@ rule read_stats:
         """
 
 
-def get_symlinked_files(wc) -> dict[str, list[str]]:
+rule merge_read_lens_by_sample_grp:
+    input:
+        grouped_reads_list=rules.group_by_sample.output,
+    output:
+        merged_read_lens=OUTPUT_DIR.joinpath(
+            "{category}/{sample}/all/reports/read_lens/{group}_read_lens.tsv"
+        ),
+    log:
+        "logs/merge_read_lens_{category}_{sample}_{group}.log",
+    shell:
+        """
+        # Remove carriage return causing cat to fail.
+        {{ awk '{{
+            if ($1 == "{wildcards.category}" && $2 == "{wildcards.sample}" && $3 == "{wildcards.group}") {{
+                print $4
+            }}
+        }}' {input.grouped_reads_list} | tr -d "\\r" | xargs cat ;}} > {output.merged_read_lens} 2> {log}
+        """
+
+
+use rule read_stats as read_stats_by_sample_grp with:
+    input:
+        script="read_stats.py",
+        all_reads_len=rules.merge_read_lens_by_sample_grp.output,
+    output:
+        plot_dir=directory(
+            OUTPUT_DIR.joinpath("{category}/{sample}/all/reports/plot/{group}_reads")
+        ),
+        read_summary=OUTPUT_DIR.joinpath(
+            "{category}/{sample}/all/reports/summary/{group}_summary.tsv"
+        ),
+    log:
+        "logs/read_stats_{category}_{sample}_{group}.log",
+    conda:
+        "env.yaml"
+    params:
+        tab_delimited_summary="-t",
+        plot_ext="pdf",
+        run_id="{sample}_{group}",
+
+
+def summarize_symlinked_files(wc) -> dict[str, list[str]]:
     output = checkpoints.symlink_dir.get(**wc).output[0]
     new_wcs = ["category", "sample", "run_info", "ftype", "run_id"]
     path_components = [
@@ -95,7 +176,7 @@ def get_symlinked_files(wc) -> dict[str, list[str]]:
     new_wcs = dict(zip(new_wcs, zip(*path_components)))
     if not new_wcs:
         print(f"{wc.run_dir} did not symlink files.", file=sys.stderr)
-        return {}
+        return []
 
     return expand(
         rules.read_stats.output,
@@ -105,13 +186,40 @@ def get_symlinked_files(wc) -> dict[str, list[str]]:
 
 rule get_read_stats:
     input:
-        unpack(get_symlinked_files),
+        summarize_symlinked_files,
     output:
         touch("output/{run_dir}.done"),
+
+
+def summarize_grouped_symlinked_files(wc):
+    output = checkpoints.group_by_sample.get(**wc).output[0]
+    categories, samples, groups = [], [], []
+    with open(output, "rt") as fh:
+        for line in fh.readlines():
+            categ, sm, group, _ = line.strip().split("\t")
+            categories.append(categ)
+            samples.append(sm)
+            groups.append(group)
+
+    return expand(
+        rules.read_stats_by_sample_grp.output,
+        zip,
+        category=categories,
+        sample=samples,
+        group=groups,
+    )
+
+
+rule get_read_stats_by_sm_grp:
+    input:
+        summarize_grouped_symlinked_files,
+    output:
+        touch("output/{sample}.done"),
 
 
 rule all:
     input:
         expand(rules.symlink_dir.output, run_dir=RUN_DIRS),
         expand(rules.get_read_stats.output, run_dir=RUN_DIRS),
+        expand(rules.get_read_stats_by_sm_grp.output, sample=SAMPLES),
     default_target: True
