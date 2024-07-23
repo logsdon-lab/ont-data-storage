@@ -22,6 +22,7 @@ wildcard_constraints:
     category="|".join(f.stem for f in OUTPUT_DIR.iterdir()),
     sample="|".join(SAMPLES),
     run_info="[^all]",
+    group="[^all]",
 
 
 checkpoint symlink_dir:
@@ -132,17 +133,28 @@ rule merge_read_lens_by_sample_grp:
         merged_read_lens=OUTPUT_DIR.joinpath(
             "{category}/{sample}/all/reports/read_lens/{group}_read_lens.tsv"
         ),
+    params:
+        condition=lambda wc: f'$1 == "{wc.category}" && $2 == "{wc.sample}" && $3 == "{wc.group}"',
     log:
         "logs/merge_read_lens_{category}_{sample}_{group}.log",
     shell:
         """
         # Remove carriage return causing cat to fail.
-        {{ awk '{{
-            if ($1 == "{wildcards.category}" && $2 == "{wildcards.sample}" && $3 == "{wildcards.group}") {{
-                print $4
-            }}
-        }}' {input.grouped_reads_list} | tr -d "\\r" | xargs cat ;}} > {output.merged_read_lens} 2> {log}
+        {{ awk '{{ if ({params.condition}) {{ print $4 }} }}' {input.grouped_reads_list} | tr -d "\\r" | xargs cat ;}} > {output.merged_read_lens} 2> {log}
         """
+
+
+use rule merge_read_lens_by_sample_grp as merge_read_lens_by_sample with:
+    input:
+        grouped_reads_list=rules.group_by_sample.output,
+    output:
+        merged_read_lens=OUTPUT_DIR.joinpath(
+            "{category}/{sample}/all/reports/read_lens/all_read_lens.tsv"
+        ),
+    params:
+        condition=lambda wc: f'$1 == "{wc.category}" && $2 == "{wc.sample}"',
+    log:
+        "logs/merge_read_lens_{category}_{sample}.log",
 
 
 use rule read_stats as read_stats_by_sample_grp with:
@@ -164,6 +176,27 @@ use rule read_stats as read_stats_by_sample_grp with:
         tab_delimited_summary="-t",
         plot_ext="pdf",
         run_id="{sample}_{group}",
+
+
+use rule read_stats as read_stats_by_sample with:
+    input:
+        script="read_stats.py",
+        all_reads_len=rules.merge_read_lens_by_sample.output,
+    output:
+        plot_dir=directory(
+            OUTPUT_DIR.joinpath("{category}/{sample}/all/reports/plot/{sample}_reads")
+        ),
+        read_summary=OUTPUT_DIR.joinpath(
+            "{category}/{sample}/all/reports/summary/{sample}_summary.tsv"
+        ),
+    log:
+        "logs/read_stats_{category}_{sample}.log",
+    conda:
+        "env.yaml"
+    params:
+        tab_delimited_summary="-t",
+        plot_ext="pdf",
+        run_id="{sample}",
 
 
 def summarize_symlinked_files(wc) -> dict[str, list[str]]:
@@ -201,18 +234,26 @@ def summarize_grouped_symlinked_files(wc):
             samples.append(sm)
             groups.append(group)
 
-    return expand(
-        rules.read_stats_by_sample_grp.output,
-        zip,
-        category=categories,
-        sample=samples,
-        group=groups,
-    )
+    return {
+        "sample_grps": expand(
+            rules.read_stats_by_sample_grp.output,
+            zip,
+            category=categories,
+            sample=samples,
+            group=groups,
+        ),
+        "sample": expand(
+            rules.read_stats_by_sample.output,
+            zip,
+            category=categories,
+            sample=samples,
+        ),
+    }
 
 
-rule get_read_stats_by_sm_grp:
+rule get_read_stats_by_sm:
     input:
-        summarize_grouped_symlinked_files,
+        unpack(summarize_grouped_symlinked_files),
     output:
         touch("output/{sample}.done"),
 
@@ -221,5 +262,5 @@ rule all:
     input:
         expand(rules.symlink_dir.output, run_dir=RUN_DIRS),
         expand(rules.get_read_stats.output, run_dir=RUN_DIRS),
-        expand(rules.get_read_stats_by_sm_grp.output, sample=SAMPLES),
+        expand(rules.get_read_stats_by_sm.output, sample=SAMPLES),
     default_target: True
