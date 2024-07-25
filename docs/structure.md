@@ -12,23 +12,14 @@
 ```
 
 ## Categories
-### `clinical`
-Clinical sample data.
-
-### `nhp`
-Non-human primate sample data.
-
-### `pop`
-human population sample data.
-
-### `practice`
-Practice runs.
-
-### `sharing`
-Data for sharing with collaborators.
-
-### `unsorted`
-Unsorted data transferred from the PromethION.
+|category|description|
+|-|-|
+|`clinical`|Human clinical data.|
+|`nhp`|Non-human primate data.|
+|`pop`|Human population data.|
+|`practice`|Practice run data.
+|`sharing`|Shared collaborator data.|
+|`unsorted`|Unsorted data transferred from the PromethION.|
 
 
 ## Sequencing Run Naming Convention
@@ -59,6 +50,7 @@ Each subdirectory will contain sample ID subdirectories derived from the name of
 Two main directory types are generated.
 * [Subsample](#subsample)
     * A directory summarizing a subsample identifier.
+    * General run metadata is included in the directory name.
 * [All](#all)
     * A directory summarizing all samples.
 

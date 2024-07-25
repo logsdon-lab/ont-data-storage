@@ -1,11 +1,29 @@
 # Scripts
-Ensure your service account has [`miniforge`](https://github.com/conda-forge/miniforge) installed.
 
-Also, if the user is not `s_prom`, the bash environment file, `scripts/other/.bashrc_conda`, must be modified.
+## Setup
+Ensure your user has [`miniforge`](https://github.com/conda-forge/miniforge) installed.
+
+## Overview
+Scripts are divided by location and run automatically view `scripts/{script}/cronjob_{script}`.
+
+### LPC
+1. `symlink_summarize`
+    * Symlinks BAM files from an input directory and generate an output directory with a specific [structure](structure.md).
+    * Generates read stats and plots to summarize a sequencing run.
+
+### PromethION
+1. `basecall`
+    * Basecalls ONT pod5 reads using `dorado`. Resumes if incomplete.
+2. `sync_data`
+    * Syncs data from PromethION to LPC using `rsync`.
+
+## Commands
 
 ### Update cronjobs
+This removes the existing user cronjob and updates it with the target cronjobs.
 ```bash
 make update_cron target="lpc"
+make update_cron target="prom"
 ```
 
 ### Create `read_stats` conda environment.
