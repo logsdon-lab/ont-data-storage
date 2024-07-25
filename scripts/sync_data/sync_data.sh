@@ -58,8 +58,8 @@ fi
 
 # Configure network connections.
 # See Settings > Network > eno1/eno2 and nmcli con
-nmcli con down "Non-ECM"
-nmcli con up "ECM" ifname eno2
+nmcli con down "Non-ECM" || true
+nmcli con up "ECM" ifname eno2 || true
 
 # https://linux.die.net/man/1/rsync
 # Sync files in data dirs keeping structure. Show progress.
@@ -75,5 +75,5 @@ else
 fi
 
 # Reset network connections.
-nmcli con down "ECM"
-nmcli con up "Non-ECM" ifname eno1
+nmcli con down "ECM" || true
+nmcli con up "Non-ECM" ifname eno1 || true
