@@ -141,7 +141,9 @@ rule merge_read_lens_by_sample_grp:
     shell:
         """
         # Remove carriage return causing cat to fail.
-        {{ awk '{{ if ({params.condition}) {{ print $4 }} }}' {input.grouped_reads_list} | tr -d "\\r" | xargs cat ;}} > {output.merged_read_lens} 2> {log}
+        for file in $(awk '{{ if ({params.condition}) {{ print $4 }} }}' {input.grouped_reads_list} | tr -d "\\r"); do
+            cat "${{file}}" >> {output.merged_read_lens} 2>> {log}
+        done
         """
 
 
