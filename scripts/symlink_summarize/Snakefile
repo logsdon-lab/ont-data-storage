@@ -68,33 +68,39 @@ checkpoint group_by_sample:
         """
 
 
+# Weird. Truncated output when piping dorado summary to awk here?
 rule get_read_lens:
     input:
         dorado=config["dorado_executable"],
         reads=OUTPUT_DIR.joinpath("{category}/{sample}/{run_info}/{ftype}/{run_id}.bam"),
     output:
-        OUTPUT_DIR.joinpath(
-            "{category}/{sample}/{run_info}/reports/read_lens/{run_id}_{ftype}_read_lens.tsv"
+        read_lens=temp(
+            OUTPUT_DIR.joinpath(
+                "{category}/{sample}/{run_info}/reports/read_lens/{run_id}_{ftype}_read_lens.tsv"
+            )
+        ),
+        read_lens_filtered=OUTPUT_DIR.joinpath(
+            "{category}/{sample}/{run_info}/reports/read_lens/{run_id}_{ftype}_read_lens_filtered.tsv"
         ),
     log:
         "logs/get_read_lens_{category}_{sample}_{run_info}_{ftype}_{run_id}.log",
     shell:
         """
-        {{ {input.dorado} summary {input.reads} | \
+        {input.dorado} summary {input.reads} > {output.read_lens} 2> {log}
         awk -v OFS='\\t' 'NR > 1 {{
             if (NF == 12) {{
                 print $2, $10, $1
             }} else {{
                 print $1, $9, "None"
             }}
-        }}' ;}}> "{output}" 2> {log}
+        }}' {output.read_lens} > {output.read_lens_filtered} 2>> {log}
         """
 
 
 rule read_stats:
     input:
         script="read_stats.py",
-        all_reads_len=rules.get_read_lens.output,
+        all_reads_len=rules.get_read_lens.output.read_lens_filtered,
     output:
         plot_dir=directory(
             OUTPUT_DIR.joinpath(
@@ -141,9 +147,7 @@ rule merge_read_lens_by_sample_grp:
     shell:
         """
         # Remove carriage return causing cat to fail.
-        for file in $(awk '{{ if ({params.condition}) {{ print $4 }} }}' {input.grouped_reads_list} | tr -d "\\r"); do
-            cat "${{file}}" >> {output.merged_read_lens} 2>> {log}
-        done
+        cat $(awk '{{ if ({params.condition}) {{ print $4 }} }}' {input.grouped_reads_list} | tr -d "\\r") > {output.merged_read_lens} 2> {log}
         """
 
 

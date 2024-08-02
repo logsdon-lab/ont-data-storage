@@ -48,7 +48,7 @@ def main():
                             sm_info,
                             "reports",
                             "read_lens",
-                            f"{run_id}_{ftype}_read_lens.tsv",
+                            f"{run_id}_{ftype}_read_lens_filtered.tsv",
                         ),
                     )
                 )
