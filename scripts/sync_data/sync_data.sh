@@ -56,11 +56,6 @@ if [ ${#basecalled_dirs[@]} -eq 0 ]; then
   exit 0
 fi
 
-# Configure network connections.
-# See Settings > Network > eno1/eno2 and nmcli con
-nmcli con down "Non-ECM" || true
-nmcli con up "ECM" ifname eno2 || true
-
 # https://linux.die.net/man/1/rsync
 # Sync files in data dirs keeping structure. Show progress.
 # After sync, remove files.
@@ -73,7 +68,3 @@ else
   # Then find empty dirs only and remove them.
   find "${basecalled_dirs[@]}" -type d -empty -delete
 fi
-
-# Reset network connections.
-nmcli con down "ECM" || true
-nmcli con up "Non-ECM" ifname eno1 || true
