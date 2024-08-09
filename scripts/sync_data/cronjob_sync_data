@@ -1,2 +1,2 @@
 # On Thursday @ 5:00pm, sync data.
-0 17 * * 4 prom /home/prom/Projects/ont-data-storage/scripts/sync_data/sync_data.sh -u "s_prom@sarlacc.pmacs.upenn.edu" -i /data -o "/project/logsdon_shared/long_read_archive/unsorted" -r "/data/20[2-9][0-9]{5}.*"
+0 17 * * 4 /home/prom/Projects/ont-data-storage/scripts/sync_data/sync_data.sh -u "s_prom@sarlacc.pmacs.upenn.edu" -i /data -o "/project/logsdon_shared/long_read_archive/unsorted" -r "/data/20[2-9][0-9]{5}.*"
