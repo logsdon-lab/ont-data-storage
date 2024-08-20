@@ -49,10 +49,38 @@ checkpoint symlink_dir:
         """
 
 
+def summarize_symlinked_files(wc) -> list[str]:
+    output = checkpoints.symlink_dir.get(**wc).output[0]
+    new_wcs = ["category", "sample", "run_info", "ftype", "run_id"]
+    path_components = [
+        pathlib.Path(f.strip()).relative_to(OUTPUT_DIR).with_suffix("").parts
+        for f in open(output).readlines()
+    ]
+    new_wcs = dict(zip(new_wcs, zip(*path_components)))
+    if not new_wcs:
+        print(f"{wc.run_dir} did not symlink files.", file=sys.stderr)
+        return []
+
+    return expand(
+        rules.read_stats.output,
+        zip,
+        **new_wcs,
+    )
+
+
+rule get_read_stats:
+    input:
+        summarize_symlinked_files,
+    output:
+        touch("output/{run_dir}.done"),
+
+
 checkpoint group_by_sample:
     input:
         script="group_samples.py",
-        dirs=expand(os.path.join("output/symlinked_{run_dir}.txt"), run_dir=RUN_DIRS),
+        dirs=expand(rules.symlink_dir.output, run_dir=RUN_DIRS),
+        # Wait to complete summary by run_dir. Otherwise, outputs grouped may not exist.
+        read_stats=expand(rules.get_read_stats.output, run_dir=RUN_DIRS),
     output:
         os.path.join("output/all_symlinked_grouped.tsv"),
     log:
@@ -170,32 +198,6 @@ use rule read_stats as read_stats_by_sample_grp with:
         tab_delimited_summary="-t",
         plot_ext="pdf",
         run_id="{sample}_{group}",
-
-
-def summarize_symlinked_files(wc) -> list[str]:
-    output = checkpoints.symlink_dir.get(**wc).output[0]
-    new_wcs = ["category", "sample", "run_info", "ftype", "run_id"]
-    path_components = [
-        pathlib.Path(f.strip()).relative_to(OUTPUT_DIR).with_suffix("").parts
-        for f in open(output).readlines()
-    ]
-    new_wcs = dict(zip(new_wcs, zip(*path_components)))
-    if not new_wcs:
-        print(f"{wc.run_dir} did not symlink files.", file=sys.stderr)
-        return []
-
-    return expand(
-        rules.read_stats.output,
-        zip,
-        **new_wcs,
-    )
-
-
-rule get_read_stats:
-    input:
-        summarize_symlinked_files,
-    output:
-        touch("output/{run_dir}.done"),
 
 
 def summarize_grouped_symlinked_files(wc) -> dict[str, list[str]]:
