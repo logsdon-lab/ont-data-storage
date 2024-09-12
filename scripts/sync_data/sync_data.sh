@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euxo pipefail
+set -euo pipefail
 
 usage() {
   echo "Usage: $0 [-u user_host] [-i input_dir] [-o output_dir] [-r regex_data_dir] [-nh]"
@@ -44,10 +44,14 @@ data_dirs=$(find "${input_dir}" -maxdepth 1 -regextype posix-egrep -regex "${reg
 # Check that dir has been basecalled.
 basecalled_dirs=()
 for dir in ${data_dirs}; do
-  basecalled_dir=$(find "${dir}" -wholename "*/pod5/basecalling/basecalling.done")
-  if [ -z "${basecalled_dir}" ]; then
+  # Number of dirs should match number of dirs with basecalling.done
+  num_dirs=$(find "${dir}" -mindepth 1 -maxdepth 1 -type d -printf '.' | wc -c)
+  basecalled_dirs=$(find "${dir}" -wholename "*/pod5/basecalling/basecalling.done" -printf '.' | wc -c)
+  if [ "${basecalled_dirs}" -ne "${num_dirs}" ]; then
+    echo "${dir} not basecalled. Skipping..."
     continue
   fi
+  echo "${dir} is basecalled. Transferring..."
   basecalled_dirs+=("${dir}")
 done
 
