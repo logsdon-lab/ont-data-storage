@@ -30,7 +30,7 @@ checkpoint symlink_dir:
         script="symlink_bams.py",
         run_dir=INPUT_DIR.joinpath("{run_dir}"),
     output:
-        os.path.join("output/symlinked_{run_dir}.txt"),
+        temp(os.path.join("output/symlinked_{run_dir}.txt")),
     params:
         output_dir=OUTPUT_DIR,
         regex_pattern=lambda wc: config["regex_pattern"],
@@ -72,7 +72,7 @@ rule get_read_stats:
     input:
         summarize_symlinked_files,
     output:
-        touch("output/{run_dir}.done"),
+        temp(touch("output/{run_dir}.done")),
 
 
 checkpoint group_by_sample:
@@ -232,7 +232,7 @@ rule get_read_stats_by_sm:
     input:
         unpack(summarize_grouped_symlinked_files),
     output:
-        touch("output/{sample}.done"),
+        temp(touch("output/{sample}.done")),
 
 
 rule all:
