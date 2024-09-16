@@ -46,8 +46,8 @@ basecalled_dirs=()
 for dir in ${data_dirs}; do
   # Number of dirs should match number of dirs with basecalling.done
   num_dirs=$(find "${dir}" -mindepth 1 -maxdepth 1 -type d -printf '.' | wc -c)
-  basecalled_dirs=$(find "${dir}" -wholename "*/pod5/basecalling/basecalling.done" -printf '.' | wc -c)
-  if [ "${basecalled_dirs}" -ne "${num_dirs}" ]; then
+  num_basecalled_dirs=$(find "${dir}" -wholename "*/pod5/basecalling/basecalling.done" -printf '.' | wc -c)
+  if [ "${num_basecalled_dirs}" -ne "${num_dirs}" ]; then
     echo "${dir} not basecalled. Skipping..."
     continue
   fi
