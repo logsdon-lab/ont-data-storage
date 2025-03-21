@@ -63,11 +63,16 @@ fi
 # https://linux.die.net/man/1/rsync
 # Sync files in data dirs keeping structure. Show progress.
 # After sync, remove files.
+echo "Transferring BAMs first."
+args_bam=("--include='*/'" "--include='*.bam'" "--exclude='*'")
 if [ "${dry_run}" == "true" ]; then
-  rsync --dry-run --verbose -P "${basecalled_dirs[@]}" "${host}:${output_dir}"
+  args=("--dry-run" "--verbose" "-P")
+  rsync "${args[@]}" "${args_bam[@]}" "${basecalled_dirs[@]}" "${host}:${output_dir}"
+  rsync "${args[@]}" -P "${basecalled_dirs[@]}" "${host}:${output_dir}"
 else
-  rsync --archive --update --compress --verbose -P --remove-source-files \
-      "${basecalled_dirs[@]}" "${host}:${output_dir}"
+  args=("--archive" "--update" "--compress" "--verbose" "-P" "--remove-source-files")
+  rsync "${args[@]}" "${args_bam[@]}" "${basecalled_dirs[@]}" "${host}:${output_dir}"
+  rsync "${args[@]}" "${basecalled_dirs[@]}" "${host}:${output_dir}"
 
   # Then find empty dirs only and remove them.
   find "${basecalled_dirs[@]}" -type d -empty -delete
