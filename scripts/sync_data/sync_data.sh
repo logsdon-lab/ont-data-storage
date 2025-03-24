@@ -64,15 +64,16 @@ fi
 # Sync files in data dirs keeping structure. Show progress.
 # After sync, remove files.
 echo "Transferring BAMs first."
-args_bam=("--include='*/'" "--include='*.bam'" "--exclude='*'")
+args_bam=("--include=*/" "--include=*.bam" "--exclude=*")
 if [ "${dry_run}" == "true" ]; then
   args=("--dry-run" "--verbose" "-P")
-  rsync "${args[@]}" "${args_bam[@]}" "${basecalled_dirs[@]}" "${host}:${output_dir}"
-  rsync "${args[@]}" -P "${basecalled_dirs[@]}" "${host}:${output_dir}"
+  echo rsync "${args[@]}" "${args_bam[@]}" "${basecalled_dirs[@]}" "${host}:${output_dir}"
+  echo rsync "${args[@]}" "${basecalled_dirs[@]}" "${host}:${output_dir}"
 else
   args=("--archive" "--update" "--compress" "--verbose" "-P" "--remove-source-files")
-  rsync "${args[@]}" "${args_bam[@]}" "${basecalled_dirs[@]}" "${host}:${output_dir}"
-  rsync "${args[@]}" "${basecalled_dirs[@]}" "${host}:${output_dir}"
+  rsync ${args[@]} ${args_bam[@]} "${basecalled_dirs[@]}" "${host}:${output_dir}"
+  echo "Done with BAMs"
+  rsync ${args[@]} "${basecalled_dirs[@]}" "${host}:${output_dir}"
 
   # Then find empty dirs only and remove them.
   find "${basecalled_dirs[@]}" -type d -empty -delete
