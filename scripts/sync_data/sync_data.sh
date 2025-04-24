@@ -67,6 +67,13 @@ dry_run=${dry_run:-'false'}
 processes=${processes:-'4'}
 allow_unbasecalled=${allow_unbasecalled:-'false'}
 
+# Check if rsync is running. Exit if is.
+is_rsync_running=$(pgrep rsync)
+if [[ ! -s "${is_rsync_running}" ]]; then
+  echo "rsync is currently running. Not doing anything."
+  exit 1
+fi
+
 # Find data directories matching regex pattern.
 # We restrict depth to avoid finding subdirs, etc.
 data_dirs=$(find "${input_dir}" -maxdepth 1 -regextype posix-egrep -regex "${regex_data_dir}")
