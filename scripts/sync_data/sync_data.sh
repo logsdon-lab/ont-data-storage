@@ -68,8 +68,8 @@ processes=${processes:-'4'}
 allow_unbasecalled=${allow_unbasecalled:-'false'}
 
 # Check if rsync is running. Exit if is.
-is_rsync_running=$(pgrep rsync)
-if [[ ! -s "${is_rsync_running}" ]]; then
+is_rsync_running=$(pgrep rsync || true)
+if [[ ! -z "${is_rsync_running}" ]]; then
   echo "rsync is currently running. Not doing anything."
   exit 1
 fi
