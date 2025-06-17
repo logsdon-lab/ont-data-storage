@@ -2,13 +2,16 @@
 
 set -euo pipefail
 
-module load miniconda
-eval "$(/appl/miniconda3-22.11/bin/conda shell.bash hook)"
+module load singularity
 
-conda activate logsdon
-
-wd=$(dirname "$0")
+wd="$(realpath "$(dirname "$0")")"
+bind_dir="/project/logsdon_shared/"
+container="/project/logsdon_shared/tools/snakemake.sif"
 
 cd "${wd}"
-
-snakemake -p -c 4 --use-conda --configfile config.yaml --rerun-incomplete "$@"
+singularity exec --bind "${bind_dir}" "${container}" snakemake \
+    -kp \
+    -c 24 \
+    --use-conda \
+    --configfile config.yaml \
+    --rerun-incomplete "$@"

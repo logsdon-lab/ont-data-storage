@@ -243,7 +243,7 @@ if args.tab:
     args.outfile.write("\t".join(OUTPUT_HEADER) + "\n")
 
 for sm in df["sm"].unique():
-    df_sm: pd.DataFrame = df.loc[df["sm"] == sm]
+    df_sm: pd.DataFrame = df.loc[df["sm"] == sm].dropna()
     len_list = np.flip(np.sort(df_sm[1].to_numpy()))
     len_list_k = df_sm.loc[df_sm[1] >= 100_000][1].to_numpy()
     n50_kbp = NX(len_list, 50.0) / 1000

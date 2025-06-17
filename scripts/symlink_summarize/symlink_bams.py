@@ -140,8 +140,11 @@ def main():
         except StopIteration:
             logging.warning(f"No alignment bams found in {run_root}.")
             continue
-        with pysam.AlignmentFile(bamfile, mode="r", check_sq=False) as bam:
-            bam_header = bam.header.to_dict()
+        try:
+            with pysam.AlignmentFile(bamfile, mode="r", check_sq=False) as bam:
+                bam_header = bam.header.to_dict()
+        except OSError as err:
+            logging.warning(err)
         try:
             basecaller, version = next(
                 (tg["PN"], tg["VN"])
@@ -150,7 +153,7 @@ def main():
             )
             basecaller = basecaller.replace("_", "-")
             version = version.replace("_", "-")
-        except StopIteration:
+        except (StopIteration, KeyError):
             logging.warning(
                 f"No basecaller or version number found in bam header: {bam_header}."
             )
