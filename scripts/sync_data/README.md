@@ -32,3 +32,8 @@ Transfer:
     -o "/project/logsdon_shared/long_read_archive/unsorted" \
     -r "\./20[2-9][0-9]{5}.*"
 ```
+
+Modify the user permissions of prom user to allow changing network.
+```bash
+sudo usermod -G sudo -a prom
+```
