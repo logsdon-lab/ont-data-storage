@@ -182,14 +182,13 @@ def main():
 
         # Remove existing symlink if same size.
         if (
-            bamfile.is_symlink()
+            bamfile_symlink.is_symlink()
             and bamfile.stat().st_size == bamfile_symlink.stat().st_size
         ):
-            bamfile.unlink()
+            bamfile_symlink.unlink()
 
         bamfile_symlink.symlink_to(bamfile)
         file_count[bamfile.name] += 1
-
         logging.info(f"Symlinked {bamfile} to {bamfile_symlink}")
         symlinked_files.add(bamfile_symlink)
 
