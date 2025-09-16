@@ -15,3 +15,10 @@ apptainer exec --bind "${bind_dir}" "${container}" snakemake \
     --use-conda \
     --configfile config.yaml \
     --rerun-incomplete "$@"
+
+apptainer exec --bind "${bind_dir}" "${container}" snakemake \
+    -kp \
+    -c 24 \
+    --use-conda \
+    --configfile config.yaml \
+    --delete-temp-output
