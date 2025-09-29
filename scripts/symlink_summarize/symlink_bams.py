@@ -9,6 +9,7 @@ import pysam
 
 from enum import StrEnum
 from typing import NamedTuple
+from collections import Counter
 
 logging.basicConfig(
     stream=sys.stderr,
@@ -126,6 +127,7 @@ def main():
     run_dir_info = RunDirInfo(input_dir, new_dir_path, mtch, sample_id)
 
     symlinked_files: set[pathlib.Path] = set()
+    file_count = Counter()
     for run_root, _, run_files in input_dir.walk():
         # Only get bam files in */basecalling/ directory.
         if run_root.stem != args.basecalling_outdir:
@@ -174,12 +176,19 @@ def main():
         new_results_dir.mkdir(parents=True, exist_ok=True)
 
         # And symlink alignment file.
-        bamfile_symlink = new_results_dir / bamfile.name
-        try:
-            bamfile_symlink.symlink_to(bamfile)
-        except FileExistsError:
-            logging.info(f"Skipping symlinking existing file: {bamfile_symlink}")
+        bamfile_symlink = (
+            new_results_dir / f"{bamfile.stem}_{file_count.get(bamfile.name, 0)}.bam"
+        )
 
+        # Remove existing symlink if same size.
+        if (
+            bamfile_symlink.is_symlink()
+            and bamfile.stat().st_size == bamfile_symlink.stat().st_size
+        ):
+            bamfile_symlink.unlink()
+
+        bamfile_symlink.symlink_to(bamfile)
+        file_count[bamfile.name] += 1
         logging.info(f"Symlinked {bamfile} to {bamfile_symlink}")
         symlinked_files.add(bamfile_symlink)
 
