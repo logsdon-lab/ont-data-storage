@@ -185,12 +185,13 @@ def read_fofns(fofns: List[str]) -> Generator[pd.DataFrame, None, None]:
         sm_fofn: str
         sm, _, fofn = sm_fofn.partition("=")
 
-        for f in open(fofn, "rt").readlines():
-            f = f.strip()
-            if f:
-                yield pd.read_csv(
-                    f + ".fai", sep="\t", header=None, usecols=[0, 1]
-                ).assign(sm=sm)
+        for fofn in fofn.split():
+            for f in open(fofn, "rt").readlines():
+                f = f.strip()
+                if f:
+                    yield pd.read_csv(
+                        f + ".fai", sep="\t", header=None, usecols=[0, 1]
+                    ).assign(sm=sm)
 
 
 def read_tsv_read_lens(lens: List[str]) -> Generator[pd.DataFrame, None, None]:
@@ -198,9 +199,8 @@ def read_tsv_read_lens(lens: List[str]) -> Generator[pd.DataFrame, None, None]:
         sm_len: str
         sm, _, lens_path = sm_len.partition("=")
 
-        yield pd.read_csv(lens_path, sep="\t", header=None, usecols=[0, 1]).assign(
-            sm=sm
-        )
+        for path in lens_path.split():
+            yield pd.read_csv(path, sep="\t", header=None, usecols=[0, 1]).assign(sm=sm)
 
 
 def read_samples(

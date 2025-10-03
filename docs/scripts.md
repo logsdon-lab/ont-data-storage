@@ -37,7 +37,7 @@ Requires that a [`read_stats`](#create-read_stats-conda-environment) conda env e
 ```bash
 input_bam=""
 output_dir=""
-./scripts/symlink_summarize/summary_single.sh "${input_bam}" "${output_dir}"
+./scripts/symlink_summarize/workflow/scripts/summary_single.sh "${input_bam}" "${output_dir}"
 ```
 
 ### Plot read length TSV file
@@ -46,5 +46,5 @@ Requires that a [`read_stats`](#create-read_stats-conda-environment) conda env e
 ```bash
 input_read_lens=""
 output_dir=""
-./scripts/symlink_summarize/plot_single.sh "${input_read_lens}" "${output_dir}"
+./scripts/symlink_summarize/workflow/scripts/plot_single.sh "${input_read_lens}" "${output_dir}"
 ```

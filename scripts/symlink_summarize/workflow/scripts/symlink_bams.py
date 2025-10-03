@@ -1,5 +1,4 @@
 import re
-import os
 import sys
 import time
 import pathlib
@@ -64,8 +63,8 @@ def main():
     ap.add_argument(
         "-o",
         "--output_dir",
-        default="/project/logsdon_shared/long_read_archive",
-        help="Output directory to generate subdir with symlinked files.",
+        default="/project/logsdon_shared/long_read_archive/{category}/{sample}/ont",
+        help="Output directory format string with <category> and <sample> to generate subdir with symlinked files.",
     )
     ap.add_argument(
         "-f",
@@ -89,14 +88,13 @@ def main():
     )
     args = ap.parse_args()
 
-    os.makedirs(args.output_dir, exist_ok=True)
     input_dir = pathlib.Path(args.input_dir)
     # In run directory.
     mtch = re.search(args.regex, input_dir.name)
     if not mtch:
         return
     try:
-        sorted_dir = LongReadArchiveSubDir(mtch["category"])
+        category = LongReadArchiveSubDir(mtch["category"])
     except ValueError:
         logging.error(f"Invalid category {mtch['category']} for directory, {input_dir}")
         return
@@ -116,15 +114,17 @@ def main():
     # ex. HG00171
     # ex. GGO_######
     if sample_abbrv_id[2] == "":
-        sample_id = sample_abbrv_id[0]
+        sample = sample_abbrv_id[0]
     else:
-        sample_id = sample_abbrv_id[2]
+        sample = sample_abbrv_id[2]
 
     # Make new directory if not made already.
-    new_dir_path = pathlib.Path(args.output_dir, sorted_dir, sample_id)
+    new_dir_path = pathlib.Path(
+        args.output_dir.format(category=category, sample=sample)
+    )
     new_dir_path.mkdir(parents=True, exist_ok=True)
 
-    run_dir_info = RunDirInfo(input_dir, new_dir_path, mtch, sample_id)
+    run_dir_info = RunDirInfo(input_dir, new_dir_path, mtch, sample)
 
     symlinked_files: set[pathlib.Path] = set()
     file_count = Counter()
@@ -162,23 +162,16 @@ def main():
             basecaller = "Unknown"
             version = "None"
 
-        date = (
-            run_dir_info.match_info["year"]
-            + run_dir_info.match_info["month"]
-            + run_dir_info.match_info["day"]
-        )
         sample = run_root.relative_to(input_dir).parts[0]
 
-        # Make the new directory
-        new_results_dir = pathlib.Path(
-            run_dir_info.output_dir, f"{date}-{sample}-{basecaller}-{version}", "bam"
-        )
-        new_results_dir.mkdir(parents=True, exist_ok=True)
-
         # And symlink alignment file.
-        bamfile_symlink = (
-            new_results_dir / f"{bamfile.stem}_{file_count.get(bamfile.name, 0)}.bam"
+        bamfile_symlink = pathlib.Path(
+            run_dir_info.output_dir,
+            "ubam",
+            f"{bamfile.stem}_{file_count.get(bamfile.name, 0)}-{sample}-{basecaller}-{version}.bam",
         )
+        # Make the new directory
+        bamfile_symlink.parent.mkdir(parents=True, exist_ok=True)
 
         # Remove existing symlink if same size.
         if (

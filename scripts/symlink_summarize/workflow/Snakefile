@@ -1,0 +1,40 @@
+
+
+include: "rules/common.smk"
+
+
+INPUT_DIR = pathlib.Path(config["input_dir"])
+OUTPUT_DIR = pathlib.Path(config["output_dir"])
+GLOB_ONT_OUTPUT_DIR = OUTPUT_DIR.joinpath("{category}", "{sample}", "ont")
+GLOB_ONT_OUTPUT_UBAM_DIR = GLOB_ONT_OUTPUT_DIR.joinpath("ubam")
+GLOB_ONT_OUTPUT_MDATA_DIR = GLOB_ONT_OUTPUT_DIR.joinpath("metadata")
+GLOB_ONT_OUTPUT_STATS_DIR = GLOB_ONT_OUTPUT_DIR.joinpath("stats")
+RUN_DIRS, RUN_DIR_CATEG, RUN_DIR_SAMPLE, SAMPLES, SAMPLE_CATEG, SAMPLE_RUN_DIRS = (
+    get_wildcards()
+)
+
+
+wildcard_constraints:
+    category="|".join(categ for categ in Category),
+    sample="|".join(SAMPLES),
+    run_dir="|".join(RUN_DIRS),
+    ftype="bam",
+
+
+include: "rules/symlink_files.smk"
+include: "rules/summarize_ubams.smk"
+
+
+rule all:
+    input:
+        expand(rules.symlink_ubams.output, run_dir=RUN_DIRS),
+        expand(rules.symlink_metadata.output, run_dir=RUN_DIRS),
+        expand(
+            rules.create_ubam_fofn.output,
+            zip,
+            sample=SAMPLES,
+            category=[SAMPLE_CATEG[sm] for sm in SAMPLES],
+        ),
+        expand(rules.get_read_stats.output, run_dir=RUN_DIRS),
+        expand(rules.get_read_stats_by_sm.output, sample=SAMPLES),
+    default_target: True
