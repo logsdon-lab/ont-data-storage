@@ -113,13 +113,13 @@ The `group_*_summary.tsv` files will contain read stats like the following:
 |-|-|-|-|-|
 |D0111_all|34.5|18.63|109.51|2380601|
 
-Raw read lengths can be found with files with the format `*_read_lens_filtered.tsv`.
+Raw read lengths can be found with files with the format `*_read_lens.tsv`.
 
 ```
-040bbf06-f58d-4cbe-b414-db821943dc76    25072   PAY24529_725b4221_06a81932_93.pod5
-0cb47f50-e0df-4025-97c3-11bda6799f86    37686   PAY24529_725b4221_06a81932_93.pod5
-ced1f37b-637f-4733-8ac6-7c9fcaf308ee    47022   PAY24529_725b4221_06a81932_93.pod5
-320bc1f1-c442-4e8c-a003-2f660ce4e10a    45107   PAY24529_725b4221_06a81932_93.pod5
+040bbf06-f58d-4cbe-b414-db821943dc76    25072
+0cb47f50-e0df-4025-97c3-11bda6799f86    37686
+ced1f37b-637f-4733-8ac6-7c9fcaf308ee    47022
+320bc1f1-c442-4e8c-a003-2f660ce4e10a    45107
 ```
 
 ### `ubam`

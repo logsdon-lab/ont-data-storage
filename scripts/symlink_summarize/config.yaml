@@ -3,4 +3,3 @@ output_dir: "/project/logsdon_shared/long_read_archive"
 regex_pattern: '(?P<year>\d{4})(?P<month>\d{2})(?P<day>\d{2})_(?P<category>.*?)_(?P<sample>.*?)_(?P<seq_kit>ULK.*?|LSK.*?)(?P<library_kit>_.*?)*$'
 basecalling_outdir: "basecalling"
 output_plot_ext: "pdf"
-dorado_executable: "/project/logsdon_shared/tools/dorado-0.7.3-linux-x64/bin/dorado"
