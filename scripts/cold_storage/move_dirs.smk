@@ -58,12 +58,13 @@ rule create_tarball:
             sample_id=sample_ids,
             flowcell=flowcells,
         ),
-        output_dir=lambda wc: os.path.join(STAGING_DIR, wc.run),
     output:
         tarball=os.path.join(OUTPUT_DIR, "{run}.tar.gz"),
+    params:
+        output_dir=lambda wc: os.path.join(STAGING_DIR, wc.run),
     shell:
         """
-        tar -czf {output.tarball} {input.output_dir}
+        tar -czf {output.tarball} {params.output_dir}
         """
 
 
