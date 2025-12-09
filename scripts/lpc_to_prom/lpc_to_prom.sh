@@ -12,7 +12,7 @@ transfer_lpc_to_dir() {
     input_dir=$2
     output_dir=$3
 
-    rsync -P -a --verbose "${host}:${input_dir}/" "${output_dir}" \
+    rsync -P -a --verbose "${host}:${input_dir}" "${output_dir}" \
     --include="*/" --include="*.pod5" --exclude="*"
 }
 
