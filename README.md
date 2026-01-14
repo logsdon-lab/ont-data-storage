@@ -10,6 +10,8 @@ This repo contains all relevant documentation and scripts used to transfer data 
     * Describes directory structure of `/project/logsdon_shared/long_read_archive/`
 * [`docs/cold_storage.md`](docs/cold_storage.md)
     * Describes data cold storage workflow.
+* [`docs/minknow.md`](docs/minknow.md)
+    * Describes custom settings for MinKNOW.
 
 ### Development
 ```bash
