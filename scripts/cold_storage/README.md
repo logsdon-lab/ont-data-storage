@@ -29,3 +29,15 @@ This will read the provided file and return it to its original place if it was m
 ```
 /project/logsdon_shared/long_read_archive/unsorted/20250429_clin_kid_JE0000003_ULK114/PC2/20250429_1411_1C_PAY19956_7684a5e0/pod5/PAY19956_7684a5e0_06815841_0.pod5	/project/logsdon_shared/long_read_archive/to_cold_storage/20250429_clin_kid_JE0000003_ULK114/PC2/20250429_1411_1C_PAY19956_7684a5e0/pod5/PAY19956_7684a5e0_06815841_0.pod5	move	2025-10-01 23:30:55
 ```
+
+### Upload to azarc
+Generate upload list:
+```bash
+NOW=$(date +"%Y%m%d")
+find *.tar -exec realpath {} \; >> "${NOW}-upload-list.txt"
+```
+
+Then pass to `upload_to_azarc.sh`:
+```bash
+./upload_to_azarc.sh -i "${NOW}-upload-list.txt" &> "${NOW}-upload.log"
+```
