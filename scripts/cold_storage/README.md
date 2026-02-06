@@ -39,5 +39,6 @@ find *.tar -exec realpath {} \; >> "${NOW}-upload-list.txt"
 
 Then pass to `upload_to_azarc.sh`:
 ```bash
-./upload_to_azarc.sh -i "${NOW}-upload-list.txt" &> "${NOW}-upload.log"
+NOW=$(date +"%Y%m%d")
+./upload_to_azarc.sh -i "${NOW}-upload-list.txt" -n &>  "${NOW}-upload.log"
 ```

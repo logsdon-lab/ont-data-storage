@@ -56,15 +56,17 @@ while read -r line; do
     if [[ "${DRY_RUN}" == "true" ]]; then
         # From Jason: This is important because it has characters that would confuse bash if interpreted
         # shellcheck disable=SC2086
-        echo "azcopy copy ${line}" ${URL}/?${SAS} '--block-blob-tier=archive --log-level NONE'
+        echo "azcopy copy ${line}" ${URL}/logsdon_azarc/?${SAS} '--block-blob-tier=archive --log-level NONE'
     else
         echo "Uploading ${line}." 1>&2
+        # azcopy reads from stdin and will break the while loop.
+        # https://github.com/Azure/azure-storage-azcopy/issues/3024
         # shellcheck disable=SC2086
-        azcopy copy "${line}" ${URL}/?${SAS} --block-blob-tier=archive --log-level NONE
+        : | azcopy copy "${line}" ${URL}/logsdon_azarc/?${SAS} --block-blob-tier=archive --log-level NONE
     fi
 
     if [[ "${DRY_RUN}" != "true" ]]; then
-        du "${line}" | awk -v OFS="\t" '{ print $2, $1}' >> "${DU_LIST}"
+        du -b "${line}" | awk -v OFS="\t" '{ print $2, $1}' >> "${DU_LIST}"
     fi
 done < "${infiles}"
 
@@ -85,8 +87,8 @@ if [[ "${DRY_RUN}" != "true" ]]; then
         if [[ -z "${fs_azarc}" ]]; then
             echo "WARNING: ${file} not uploaded." 1>&2
         elif [[ "${fs_du}" != "${fs_azarc}" ]]; then
+            # This is done by default by azcopy
             echo "WARNING: ${file} sizes (du='${fs_du}' != azarc='${fs_azarc}') are inconsistent." 1>&2
         fi
     done < <(join <(sort -k1,1 "${DU_LIST}") <(sort -k1,1 "${FINAL_AZURE_LIST}") -a1 -t"$(printf "\t")")
-
 fi
