@@ -10,7 +10,7 @@ GLOB_ONT_OUTPUT_UBAM_DIR = GLOB_ONT_OUTPUT_DIR.joinpath("ubam")
 GLOB_ONT_OUTPUT_MDATA_DIR = GLOB_ONT_OUTPUT_DIR.joinpath("metadata")
 GLOB_ONT_OUTPUT_STATS_DIR = GLOB_ONT_OUTPUT_DIR.joinpath("stats")
 RUN_DIRS, RUN_DIR_CATEG, RUN_DIR_SAMPLE, SAMPLES, SAMPLE_CATEG, SAMPLE_RUN_DIRS = (
-    get_wildcards()
+    get_wildcards(omit_categ=set(config.get("omit_categ", [])))
 )
 
 

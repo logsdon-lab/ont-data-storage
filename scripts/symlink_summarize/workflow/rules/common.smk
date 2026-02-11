@@ -13,7 +13,7 @@ class Category(StrEnum):
     PRACTICE = "prac"
 
 
-def get_wildcards() -> tuple[
+def get_wildcards(omit_categ: set[str] | None = None) -> tuple[
     list[pathlib.Path],
     dict[pathlib.Path, str],
     dict[pathlib.Path, str],
@@ -27,6 +27,8 @@ def get_wildcards() -> tuple[
     SAMPLES = set()
     SAMPLE_CATEG = {}
     SAMPLE_RUN_DIRS = defaultdict(list)
+    if not omit_categ:
+        omit_categ = set()
 
     for run_dir in [x.stem for x in INPUT_DIR.iterdir() if x.is_dir()]:
         mtch = re.search(config["regex_pattern"], run_dir)
@@ -43,6 +45,10 @@ def get_wildcards() -> tuple[
                     file=sys.stderr,
                 )
                 continue
+
+            if category in omit_categ:
+                continue
+
             RUN_DIRS.append(run_dir)
             RUN_DIR_CATEG[run_dir] = category
             RUN_DIR_SAMPLE[run_dir] = sample
