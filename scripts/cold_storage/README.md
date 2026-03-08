@@ -42,3 +42,11 @@ Then pass to `upload_to_azarc.sh`:
 NOW=$(date +"%Y%m%d")
 ./upload_to_azarc.sh -i "${NOW}-upload-list.txt" -n &>  "${NOW}-upload.log"
 ```
+
+To list all uploaded files:
+```bash
+module load azcopy
+SAS=$(cat notes/logsdonarc.sas)
+URL=$(cat notes/logsdonarc.url)
+azcopy list ${URL}?${SAS} --machine-readable
+```

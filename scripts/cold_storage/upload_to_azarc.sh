@@ -5,13 +5,14 @@ set -euo pipefail
 module load azcopy
 
 usage() {
-  echo "Usage: $0 [-i infiles] [-u url] [-s sas] [-nh]"
+  echo "Usage: $0 [-i infiles] [-u url] [-s sas] [-p processes] [-nh]"
   echo "Upload files to azarc."
   echo ""
   echo "Arguments:"
   echo "    -u      File with URL of azarc."
   echo "    -i      Input file paths to upload to -u. One file per line."
   echo "    -s      SAS token"
+  echo "    -p      Processes to run in parallel. File list is deduplicated prior to run."
   echo "    -n      Dry-run"
   echo "    -h      Print help."
   echo ""
@@ -19,12 +20,37 @@ usage() {
   echo "./upload_to_azarc.sh -i files.txt -u azarc.url -s azarc.sas"
 }
 
+# We need to store AZARC_DEST as environment variable rather than shell var arg to avoid expanding special characters.
+# Probably possible to do this but don't want to fiddle with it.
+upload_to_azarc_one() {
+    src=$1
+    dry_run=$2
+    du_list=$3
+
+    if [[ "${dry_run}" == "true" ]]; then
+        # From Jason: This is important because it has characters that would confuse bash if interpreted
+        # shellcheck disable=SC2086
+        echo "azcopy copy ${src}" ${AZARC_DEST} '--block-blob-tier=archive --log-level NONE'
+    else
+        echo "Uploading ${src}."
+        # azcopy reads from stdin and will break the while loop.
+        # https://github.com/Azure/azure-storage-azcopy/issues/3024
+        # shellcheck disable=SC2086
+        : | azcopy copy "${src}" ${AZARC_DEST} --block-blob-tier=archive --log-level NONE
+    fi
+
+    if [[ "${dry_run}" != "true" ]]; then
+        du -b "${src}" | awk -v OFS="\t" '{ print $2, $1}' >> "${du_list}"
+    fi
+}
+
 # Files to move.
-while getopts 'u:i:s:hn' flag; do
+while getopts 'u:i:s:p:hn' flag; do
   case "${flag}" in
     i) infiles=${OPTARG} ;;
     u) url=${OPTARG} ;;
     s) sas=${OPTARG};;
+    p) processes=${OPTARG};;
     n) dry_run="true" ;;
     h) usage; exit 0 ;;
     *) usage; exit 1 ;;
@@ -35,6 +61,7 @@ WD="/project/logsdon_azarc"
 NOW=$(date +"%Y%m%d")
 SAS=$(cat "${sas:-"${WD}/notes/logsdonarc.sas"}")
 URL=$(cat "${url:-"${WD}/notes/logsdonarc.url"}")
+PROCESSES="${processes:-1}"
 DRY_RUN="${dry_run:-"false"}"
 
 # For final check before removing.
@@ -52,23 +79,17 @@ if [[ "${DRY_RUN}" != "true" ]]; then
     rm -f "${DU_LIST}"
 fi
 
-while read -r line; do
-    if [[ "${DRY_RUN}" == "true" ]]; then
-        # From Jason: This is important because it has characters that would confuse bash if interpreted
-        # shellcheck disable=SC2086
-        echo "azcopy copy ${line}" ${URL}/logsdon_azarc/?${SAS} '--block-blob-tier=archive --log-level NONE'
-    else
-        echo "Uploading ${line}." 1>&2
-        # azcopy reads from stdin and will break the while loop.
-        # https://github.com/Azure/azure-storage-azcopy/issues/3024
-        # shellcheck disable=SC2086
-        : | azcopy copy "${line}" ${URL}/logsdon_azarc/?${SAS} --block-blob-tier=archive --log-level NONE
-    fi
+export -f upload_to_azarc_one
+# From Jason: This is important because it has characters that would confuse bash if interpreted
+# shellcheck disable=SC2125
+export AZARC_DEST=${URL}/logsdon_azarc/?${SAS}
 
-    if [[ "${DRY_RUN}" != "true" ]]; then
-        du -b "${line}" | awk -v OFS="\t" '{ print $2, $1}' >> "${DU_LIST}"
-    fi
-done < "${infiles}"
+# Upload deduplicated files in parallel.
+sort -u "${infiles}" | \
+xargs \
+    -P "${PROCESSES}" \
+    -I {} \
+    bash -c "upload_to_azarc_one {} ${DRY_RUN} ${DU_LIST}"
 
 # logsdon_azarc/20240328_nhp_Gorilla_PR00101_ULK114_Phenol_2_2.tar.gz; Content Length: 826529555750
 # Format list so matches du list.
