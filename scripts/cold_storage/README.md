@@ -1,23 +1,37 @@
 # Scripts for cold storage
 
-## Workflow
-First create a fofn of completed run directories in the LRA to transfer.
-```
-/project/logsdon_shared/long_read_archive/unsorted/20250506_clin_kid_LT18-34C_ULK114
+## Normal
+Generate list of directories to tarball.
+```bash
+NOW=$(date +"%Y-%m-%d")
+RUNS="/project/logsdon_shared/long_read_archive/staging_cold_storage/${NOW}.fofn"
+
+find */*/*/pod5/*.pod5 | awk '{ match ($1, "^([^/]*?)/", dr); print dr[1]}' | \
+sort -u | \
+awk '{ print "/project/logsdon_shared/long_read_archive/unsorted/"$1 }' >
 ```
 
-You can generate a fofn of all basecalled BAMs contain 5mCG. Anything not moved will need to be rebasecalled later.
+Move and create tarball of directories.
+```bash
+# This will generate a fofn for the downstream upload step.
+snakemake -np -s move_dirs.smk -c 12 --config runs="${RUNS}" --rerun-triggers mtime
+```
+
+## Workflow (5mCG only)
+Special case for needing to move only 5mCG runs.
+
+First create a fofn of completed run directories in the LRA to transfer. You can generate a fofn of all basecalled BAMs contain 5mCG. Anything not moved will need to be rebasecalled later.
 ```bash
 # Requires samtools
 ./find_all_5mCG.sh > runs.fofn
 ```
 
-Then run the Snakefile providing runs and the output directory for the tarballs.
+Then run the snakefile providing runs and the output directory for the tarballs.
 ```bash
 RUNS="runs.fofn"
 OUTPUT_DIR="/project/logsdon_azarc/"
 
-snakemake -np -s move_dirs.smk -c 12 --config output_dir="${OUTPUT_DIR}" runs="${RUNS}"
+snakemake -np -s move_dirs.smk -c 12 --config output_dir="${OUTPUT_DIR}" runs="${RUNS}"  --rerun-triggers mtime
 ```
 
 If you need to revert a move, you can use the `revert_moves.sh`.
@@ -31,7 +45,7 @@ This will read the provided file and return it to its original place if it was m
 ```
 
 ### Upload to azarc
-Generate upload list:
+Generate upload list if one has not already been created:
 ```bash
 NOW=$(date +"%Y%m%d")
 find *.tar -exec realpath {} \; >> "${NOW}-upload-list.txt"
@@ -40,7 +54,7 @@ find *.tar -exec realpath {} \; >> "${NOW}-upload-list.txt"
 Then pass to `upload_to_azarc.sh`:
 ```bash
 NOW=$(date +"%Y%m%d")
-./upload_to_azarc.sh -i "${NOW}-upload-list.txt" -n &>  "${NOW}-upload.log"
+./upload_to_azarc.sh -i "${NOW}-upload-list.txt" -n &> "${NOW}-upload.log"
 ```
 
 To list all uploaded files:
