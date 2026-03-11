@@ -81,7 +81,7 @@ rule create_upload_list_fofn:
         runs=os.path.join(OUTPUT_DIR, f"{NOW}-upload-list.txt"),
     shell:
         """
-        realpath {input} > {output}
+        realpath {input} | sort -u > {output}
         """
 
 
