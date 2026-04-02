@@ -13,7 +13,9 @@ with open(RUNS) as fh:
 
 
 # TODO: Remove pod5 and add to move_to_dir.input
-glob_run_dir = os.path.join(LRA, "unsorted", "{run}", "{sample_id}", "{flowcell}")
+glob_run_dir = os.path.join(
+    LRA, "promethion_data", "{run}", "{sample_id}", "{flowcell}"
+)
 wcs = glob_wildcards(glob_run_dir)
 runs, sample_ids, flowcells = zip(
     *[

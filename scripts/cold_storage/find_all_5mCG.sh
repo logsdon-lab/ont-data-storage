@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-RUNS_DIR="${1:-"/project/logsdon_shared/long_read_archive/unsorted"}"
+RUNS_DIR="${1:-"/project/logsdon_shared/long_read_archive/promethion_data"}"
 
 usage() {
     echo "usage ${0}: ./find_all_5mCG.sh RUNS_DIR"

@@ -8,7 +8,7 @@ RUNS="/project/logsdon_shared/long_read_archive/staging_cold_storage/${NOW}.fofn
 
 find */*/*/pod5/*.pod5 | awk '{ match ($1, "^([^/]*?)/", dr); print dr[1]}' | \
 sort -u | \
-awk '{ print "/project/logsdon_shared/long_read_archive/unsorted/"$1 }' >
+awk '{ print "/project/logsdon_shared/long_read_archive/promethion_data/"$1 }' >
 ```
 
 Move and create tarball of directories.
@@ -41,7 +41,7 @@ If you need to revert a move, you can use the `revert_moves.sh`.
 
 This will read the provided file and return it to its original place if it was moved.
 ```
-/project/logsdon_shared/long_read_archive/unsorted/20250429_clin_kid_JE0000003_ULK114/PC2/20250429_1411_1C_PAY19956_7684a5e0/pod5/PAY19956_7684a5e0_06815841_0.pod5	/project/logsdon_shared/long_read_archive/to_cold_storage/20250429_clin_kid_JE0000003_ULK114/PC2/20250429_1411_1C_PAY19956_7684a5e0/pod5/PAY19956_7684a5e0_06815841_0.pod5	move	2025-10-01 23:30:55
+/project/logsdon_shared/long_read_archive/promethion_data/20250429_clin_kid_JE0000003_ULK114/PC2/20250429_1411_1C_PAY19956_7684a5e0/pod5/PAY19956_7684a5e0_06815841_0.pod5	/project/logsdon_shared/long_read_archive/to_cold_storage/20250429_clin_kid_JE0000003_ULK114/PC2/20250429_1411_1C_PAY19956_7684a5e0/pod5/PAY19956_7684a5e0_06815841_0.pod5	move	2025-10-01 23:30:55
 ```
 
 ### Upload to azarc

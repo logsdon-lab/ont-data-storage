@@ -14,7 +14,7 @@ Arguments:
     -h      Print help.
 
 Example:
-./sync_data.sh -u koisland@sarlacc.pmacs.upenn.edu -i /data -o /project/logsdon_shared/long_read_archive/unsorted -r '\./20[2-9][0-9]{5}.*'
+./sync_data.sh -u koisland@sarlacc.pmacs.upenn.edu -i /data -o /project/logsdon_shared/long_read_archive/promethion_data -r '\./20[2-9][0-9]{5}.*'
 ```
 
 Transfer:
@@ -22,14 +22,14 @@ Transfer:
 * From the local directory `/data`
     * Any file or directory relative to the local directory with the regex pattern, `\./20[2-9][0-9]{5}.*`
         * ex. `20241221...`
-* To the host directory, `/project/logsdon_shared/long_read_archive/unsorted`
+* To the host directory, `/project/logsdon_shared/long_read_archive/promethion_data`
     * **NOTE** This directory must exist.
 
 ```bash
 ./sync_data.sh \
     -u "koisland@sarlacc.pmacs.upenn.edu" \
     -i "/data" \
-    -o "/project/logsdon_shared/long_read_archive/unsorted" \
+    -o "/project/logsdon_shared/long_read_archive/promethion_data" \
     -r "\./20[2-9][0-9]{5}.*"
 ```
 

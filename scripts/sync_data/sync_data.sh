@@ -17,9 +17,9 @@ transfer_dir_rsync() {
     echo rsync "${args[@]}" "${host_dir}" "${remote_dir}"
   else
     args=("--archive" "--update" "--compress" "--verbose" "-P" "--remove-source-files")
-    rsync ${args[@]} ${args_bam[@]} "${host_dir}" "${remote_dir}"
+    rsync "${args[@]}" "${args_bam[@]}" "${host_dir}" "${remote_dir}"
     echo "Done with BAMs"
-    rsync ${args[@]} "${host_dir}" "${remote_dir}"
+    rsync "${args[@]}" "${host_dir}" "${remote_dir}"
 
     # Then find empty dirs only and remove them.
     find "${host_dir}" -type d -empty -delete
@@ -41,7 +41,7 @@ usage() {
   echo "    -h      Print help."
   echo ""
   echo "Example:"
-  echo "./scripts/sync_data.sh -u "s_prom@sarlacc.pmacs.upenn.edu" -i '/data' -o '/project/logsdon_shared/long_read_archive/unsorted' -r '/data/20[2-9][0-9]{5}.*'"
+  echo "./scripts/sync_data.sh -u "s_prom@sarlacc.pmacs.upenn.edu" -i '/data' -o '/project/logsdon_shared/long_read_archive/promethion_data' -r '/data/20[2-9][0-9]{5}.*'"
 }
 
 while getopts 'u:i:o:r:p:hna' flag; do
@@ -61,7 +61,7 @@ done
 # Set default
 host=${host:-'s_prom@sarlacc.pmacs.upenn.edu'}
 input_dir=${input_dir:-'/data'}
-output_dir=${output_dir:-'/project/logsdon_shared/long_read_archive/unsorted'}
+output_dir=${output_dir:-'/project/logsdon_shared/long_read_archive/promethion_data'}
 regex_data_dir=${regex_data_dir:-"${input_dir}/20[2-9][0-9]{5}.*"}
 dry_run=${dry_run:-'false'}
 processes=${processes:-'4'}
@@ -69,7 +69,7 @@ allow_unbasecalled=${allow_unbasecalled:-'false'}
 
 # Check if rsync is running. Exit if is.
 is_rsync_running=$(pgrep rsync || true)
-if [[ ! -z "${is_rsync_running}" ]]; then
+if [[ -n "${is_rsync_running}" ]]; then
   echo "rsync is currently running. Not doing anything."
   exit 1
 fi

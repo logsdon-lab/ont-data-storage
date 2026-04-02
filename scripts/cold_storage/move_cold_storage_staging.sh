@@ -5,7 +5,7 @@ set -euo pipefail
 usage() {
     echo "Usage: $0 [-i <string>] [-o <string>] [-d]"
     echo "Options:"
-    echo "  -i          Input run directory. ex. '/project/logsdon_shared/long_read_archive/unsorted/{run_dir}/{sample_id}/{flowcell}'"
+    echo "  -i          Input run directory. ex. '/project/logsdon_shared/long_read_archive/promethion_data/{run_dir}/{sample_id}/{flowcell}'"
     echo "  -o          Output run directory."
     echo "  -d          Dry-run."
 }
