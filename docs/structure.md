@@ -132,7 +132,7 @@ To view where the files are linked to, use `tree` or `ls -lah`.
 ```
 /project/logsdon_shared/long_read_archive/pop/D0111/ont/ubam/
 ├── 20250325_pop_AFR_D0111_ULK114_0-FN1-dorado-0.7.3+6e6c45c.bam -> /project/logsdon_shared/long_read_archive/unsorted/20250325_pop_AFR_D0111_ULK114/FN1/20250325_1435_1E_PAY24529_725b4221/pod5/basecalling/20250325_pop_AFR_D0111_ULK114.bam
-├── 20250325_pop_AFR_D0111_ULK114_1-FN2-dorado-0.7.3+6e6c45c.bam -> /project/logsdon_shared/long_read_archive/unsorted/20250325_pop_AFR_D0111_ULK114/FN2/20250325_1435_1G_PBA40097_12a274dd/pod5/basecalling/20250325_pop_AFR_D0111_ULK114.bam                                                                            225
-├── 20250401_pop_AFR_D0111_ULK114_0-PC1-dorado-0.7.3+6e6c45c.bam -> /project/logsdon_shared/long_read_archive/unsorted/20250401_pop_AFR_D0111_ULK114/PC1/2  -2250250401_1222_1B_PAY37327_8ffbf438/pod5/basecalling/20250401_pop_AFR_D0111_ULK -114.bam
+├── 20250325_pop_AFR_D0111_ULK114_1-FN2-dorado-0.7.3+6e6c45c.bam -> /project/logsdon_shared/long_read_archive/unsorted/20250325_pop_AFR_D0111_ULK114/FN2/20250325_1435_1G_PBA40097_12a274dd/pod5/basecalling/20250325_pop_AFR_D0111_ULK114.bam
+├── 20250401_pop_AFR_D0111_ULK114_0-PC1-dorado-0.7.3+6e6c45c.bam -> /project/logsdon_shared/long_read_archive/unsorted/20250401_pop_AFR_D0111_ULK114/PC1/20250401_1222_1B_PAY37327_8ffbf438/pod5/basecalling/20250401_pop_AFR_D0111_ULK114.bam
 └── D0111_ubam.fofn
 ```
