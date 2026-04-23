@@ -103,19 +103,20 @@ def group_read_len(wc):
     ]
     groups = get_groups(sample=wc.sample, category=category)
     if wc.group == "all":
-        return expand(
+        outputs = expand(
             rules.get_read_lens.output.read_lens,
             category=category,
             sample=wc.sample,
             fname=[fname for fnames in groups.values() for fname in fnames],
         )
     else:
-        return expand(
+        outputs = expand(
             rules.get_read_lens.output.read_lens,
             category=category,
             sample=wc.sample,
             fname=groups[wc.group],
         )
+    return outputs
 
 
 use rule read_stats as read_stats_by_sample_grp with:
@@ -161,5 +162,7 @@ def summarize_grouped_symlinked_files(wc) -> dict[str, list[str]]:
 rule get_read_stats_by_sm:
     input:
         unpack(summarize_grouped_symlinked_files),
+        # Enforce everything to be done before checking groups. Was causing race condition.
+        chkpt=expand(rules.get_read_stats.output, run_dir=RUN_DIRS),
     output:
         temp(touch("output/{sample}.done")),
