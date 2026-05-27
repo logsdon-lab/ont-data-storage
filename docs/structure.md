@@ -1,8 +1,8 @@
 # Structure
-`/project/logsdon_shared/long-read-archive` is where sequencing data from the ONT PromethION is stored.
+`/project/logsdon_shared/long_read_archive` is where sequencing data from the ONT PromethION is stored.
 
 ```
-/project/logsdon_shared/long-read-archive/
+/project/logsdon_shared/long_read_archive/
 ├── clinical
 ├── nhp
 ├── pop
