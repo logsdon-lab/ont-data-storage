@@ -46,10 +46,10 @@ This will read the provided file and return it to its original place if it was m
 ```
 
 ### Upload to azarc
-Generate upload list if one has not already been created:
+Generate upload list:
 ```bash
 NOW=$(date +"%Y%m%d")
-find *.tar -exec realpath {} \; >> "${NOW}-upload-list.txt"
+find *.tar *.tar.gz -exec realpath {} \; >> "${NOW}-upload-list.txt"
 ```
 
 Then pass to `upload_to_azarc.sh`:
@@ -61,7 +61,34 @@ NOW=$(date +"%Y%m%d")
 To list all uploaded files:
 ```bash
 module load azcopy
-SAS=$(cat notes/logsdonarc.sas)
-URL=$(cat notes/logsdonarc.url)
+SAS=$(cat /project/logsdon_azarc/notes/logsdonarc.sas)
+URL=$(cat /project/logsdon_azarc/notes/logsdonarc.url)
 azcopy list ${URL}?${SAS} --machine-readable
+```
+
+To restore an archived file:
+* Converts status from `archive` to `cool`.
+```bash
+FILE="logsdon_azarc/T21_Hakon.tar"
+SAS=$(cat /project/logsdon_azarc/notes/logsdonarc.sas)
+URL=$(cat /project/logsdon_azarc/notes/logsdonarc.url)
+azcopy set-properties ${URL}/${FILE}?${SAS} --block-blob-tier=Cool --dry-run
+```
+
+You can check on its progress via the following commmand:
+```bash
+az storage blob show --account-name logsdonarc --sas-token ${SAS} --blob-url ${URL}/${FILE}
+```
+
+After you're done, set it back.
+```bash
+azcopy set-properties ${URL}/${FILE}?${SAS} --block-blob-tier=Archive --dry-run
+```
+
+To retrieve:
+```bash
+FILE="logsdon_azarc/T21_Hakon.tar"
+SAS=$(cat /project/logsdon_azarc/notes/logsdonarc.sas)
+URL=$(cat /project/logsdon_azarc/notes/logsdonarc.url)
+azcopy cp ${URL}/${FILE}?${SAS} .
 ```
