@@ -6,7 +6,7 @@ RUNS = config.get("runs", "runs.fofn")
 OUTPUT_DIR = config.get("output_dir", "/project/logsdon_azarc/")
 GZ = config.get("gzip", False)
 LRA = "/project/logsdon_shared/long_read_archive"
-STAGING_DIR = "/project/logsdon_shared/long_read_archive/staging_cold_storage"
+STAGING_DIR = "/project/logsdon_shared/long_read_archive/staging/cold_storage"
 
 with open(RUNS) as fh:
     runs_to_move = set(os.path.basename(line.strip()) for line in fh)
