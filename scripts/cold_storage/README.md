@@ -4,11 +4,12 @@
 Generate list of directories to tarball.
 ```bash
 NOW=$(date +"%Y-%m-%d")
-RUNS="/project/logsdon_shared/long_read_archive/staging_cold_storage/${NOW}.fofn"
+INDIR=/project/logsdon_shared/long_read_archive/promethion_data
+RUNS="/project/logsdon_shared/long_read_archive/staging/cold_storage/${NOW}.fofn"
 
-find */*/*/pod5/*.pod5 | awk '{ match ($1, "^([^/]*?)/", dr); print dr[1]}' | \
-sort -u | \
-awk '{ print "/project/logsdon_shared/long_read_archive/promethion_data/"$1 }' >
+find "${INDIR}"/*/*/*/pod5/*.pod5 | \
+awk -v ID="${INDIR}" '{ match ($1, "("ID"/[^/]*?)/", dr); print dr[1]}' | \
+sort -u > "${RUNS}"
 ```
 
 Move and create tarball of directories.
